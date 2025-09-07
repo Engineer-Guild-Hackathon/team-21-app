@@ -1,0 +1,8 @@
+# デフォルトのオーナーをGeminiに設定
+*       @gemini-review
+
+# 特定のディレクトリやファイルに対するオーナーの設定
+/backend/  @gemini-review
+/frontend/ @gemini-review
+/ml/       @gemini-review
+*.md       @gemini-review
