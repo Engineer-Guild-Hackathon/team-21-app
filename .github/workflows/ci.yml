@@ -51,8 +51,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/noncog_test
           SECRET_KEY: test_secret_key
+          PYTHONPATH: ${{ github.workspace }}/backend/src
         run: |
-          pytest
+          pip install pytest pytest-asyncio
+          python -m pytest
 
   frontend-tests:
     runs-on: ubuntu-latest
