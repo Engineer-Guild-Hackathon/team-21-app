@@ -12,3 +12,4 @@ seaborn==0.13.2
 tensorboard==2.15.1
 gym==0.26.2
 tqdm==4.66.1
+uvicorn==0.29.0
