@@ -37,6 +37,7 @@ jobs:
           pip install -r requirements.txt
       - name: Create test database
         run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "DROP DATABASE IF EXISTS noncog_test;"
           PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE noncog_test;"
       - name: Run migrations
         working-directory: ./backend
