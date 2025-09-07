@@ -1,0 +1,80 @@
+name: バグ報告
+description: バグや問題点の報告
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## バグ報告
+        発生しているバグや問題点について詳細を記入してください。
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 影響コンポーネント
+      options:
+        - Frontend
+        - Backend
+        - ML
+        - Infrastructure
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: 現在の動作
+      description: 発生している問題について説明してください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 期待する動作
+      description: 本来どのように動作すべきか説明してください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: 再現手順
+      description: |
+        バグを再現するための手順を記入してください。
+        例：
+        1. ログインページにアクセス
+        2. メールアドレスとパスワードを入力
+        3. ログインボタンをクリック
+        4. エラーが発生
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログやエラーメッセージ
+      description: 関連するログやエラーメッセージがあれば記入してください。
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: 追加情報
+      description: その他、関連する情報があれば記入してください。
+    validations:
+      required: false

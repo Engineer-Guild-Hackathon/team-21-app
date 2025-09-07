@@ -1,0 +1,80 @@
+name: 機能実装
+description: 新機能の実装や既存機能の改善
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 機能実装の提案
+        新機能の実装や既存機能の改善についての詳細を記入してください。
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: コンポーネント
+      options:
+        - Frontend
+        - Backend
+        - ML
+        - Infrastructure
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-status
+    attributes:
+      label: 現在の状況
+      description: 現在の実装状況や問題点について説明してください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: 必要な実装
+      description: |
+        実装が必要な項目を箇条書きで記入してください。
+        例：
+        - [ ] ログインフォームの実装
+        - [ ] バリデーションの追加
+        - [ ] エラーハンドリング
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-specs
+    attributes:
+      label: 技術仕様
+      description: |
+        使用する技術やライブラリ、実装方法について記入してください。
+        例：
+        - Next.js
+        - FastAPI
+        - PostgreSQL
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: 受け入れ基準
+      description: |
+        実装が完了したと判断するための基準を記入してください。
+        例：
+        1. ログインフォームが正常に動作する
+        2. エラー時に適切なメッセージが表示される
+    validations:
+      required: true
