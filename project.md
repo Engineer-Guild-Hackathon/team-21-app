@@ -167,8 +167,8 @@ make clean
 
 - main: 本番環境
 - develop: 開発環境
-- feature/*: 機能開発
-- bugfix/*: バグ修正
+- feature/\*: 機能開発
+- bugfix/\*: バグ修正
 
 ### コミットメッセージ規約
 
@@ -204,6 +204,7 @@ make test-ml
 ### よくある問題
 
 1. コンテナが起動しない
+
 ```bash
 # ログの確認
 make logs
@@ -213,6 +214,7 @@ make restart
 ```
 
 2. パッケージの依存関係エラー
+
 ```bash
 # 環境の再セットアップ
 make clean
@@ -220,6 +222,7 @@ make setup
 ```
 
 3. データベース接続エラー
+
 ```bash
 # データベースのマイグレーションを再実行
 make db-migrate
