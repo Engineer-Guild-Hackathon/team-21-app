@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -11,6 +12,10 @@ from domain.models.user import User  # 必要なモデルをインポート
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# データベースURLを環境変数から取得
+db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/noncog")
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
