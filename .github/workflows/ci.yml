@@ -39,6 +39,7 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/noncog_test
+          PYTHONPATH: ${{ github.workspace }}/backend/src
         run: |
           alembic upgrade head
       - name: Run tests
