@@ -1,4 +1,4 @@
-konn# Non-Cog Learning Platform
+# Non-Cog Learning Platform
 
 ## プロジェクト概要
 
@@ -11,6 +11,7 @@ Non-Cog は、生徒の非認知能力を育成するための革新的な学習
 - Docker
 - Docker Compose
 - Git
+- Make
 
 ### セットアップ手順
 
@@ -28,30 +29,54 @@ cp .env.example .env
 # .envファイルを編集して必要な環境変数を設定
 ```
 
-3. Docker コンテナの起動
+3. 開発環境のセットアップと起動
 
 ```bash
-# 全サービスの起動
-docker-compose up -d
+# 環境のセットアップ（初回のみ）
+make setup
 
-# 特定のサービスのみ起動
-docker-compose up -d frontend backend
+# 全サービスの起動
+make start
+
+# 特定のサービスの再起動
+make restart
 ```
 
-4. 開発用コマンド
+4. データベースのセットアップ
 
 ```bash
-# フロントエンドの開発サーバー
-docker-compose exec frontend npm run dev
+# マイグレーションの実行
+make db-migrate
 
-# バックエンドの開発サーバー
-docker-compose exec backend uvicorn src.main:app --reload
+# マイグレーションのロールバック（必要な場合）
+make db-rollback
+```
 
-# MLサービスの開発
-docker-compose exec ml_service python -m pytest
+### 開発用コマンド
 
-# データパイプラインの開発
-docker-compose exec data_pipeline python stream_processor.py
+```bash
+# フロントエンド開発サーバー
+make dev-frontend
+
+# バックエンド開発サーバー
+make dev-backend
+
+# テストの実行
+make test              # 全てのテスト
+make test-frontend    # フロントエンドのテスト
+make test-backend     # バックエンドのテスト
+make test-ml          # MLサービスのテスト
+
+# リントの実行
+make lint             # 全てのリント
+make lint-frontend   # フロントエンドのリント
+make lint-backend    # バックエンドのリント
+
+# ログの確認
+make logs
+
+# 環境のクリーンアップ
+make clean
 ```
 
 ### 各サービスのアクセス
@@ -142,8 +167,8 @@ docker-compose exec data_pipeline python stream_processor.py
 
 - main: 本番環境
 - develop: 開発環境
-- feature/\*: 機能開発
-- bugfix/\*: バグ修正
+- feature/*: 機能開発
+- bugfix/*: バグ修正
 
 ### コミットメッセージ規約
 
@@ -158,17 +183,13 @@ docker-compose exec data_pipeline python stream_processor.py
 ### テスト
 
 ```bash
-# フロントエンドのテスト
-docker-compose exec frontend npm test
+# 全てのテストを実行
+make test
 
-# バックエンドのテスト
-docker-compose exec backend pytest
-
-# MLモデルのテスト
-docker-compose exec ml_service pytest
-
-# データパイプラインのテスト
-docker-compose exec data_pipeline pytest
+# コンポーネント別のテスト
+make test-frontend
+make test-backend
+make test-ml
 ```
 
 ### デバッグ
@@ -183,28 +204,25 @@ docker-compose exec data_pipeline pytest
 ### よくある問題
 
 1. コンテナが起動しない
-
 ```bash
 # ログの確認
-docker-compose logs [service_name]
+make logs
 
-# コンテナの再起動
-docker-compose restart [service_name]
+# サービスの再起動
+make restart
 ```
 
 2. パッケージの依存関係エラー
-
 ```bash
-# パッケージの更新
-docker-compose exec [service_name] pip install -r requirements.txt
+# 環境の再セットアップ
+make clean
+make setup
 ```
 
 3. データベース接続エラー
-
 ```bash
-# DBコンテナの状態確認
-docker-compose ps db
-docker-compose logs db
+# データベースのマイグレーションを再実行
+make db-migrate
 ```
 
 ### デバッグツール
