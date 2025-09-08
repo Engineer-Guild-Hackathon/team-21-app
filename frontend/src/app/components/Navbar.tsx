@@ -13,7 +13,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Fragment } from 'react';
 import { useAuth, UserRole } from '../contexts/AuthContext';
 
@@ -63,11 +63,22 @@ function classNames(...classes: string[]) {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
 
   // ユーザーの種類に応じたナビゲーション項目を取得
   const navigation = user ? navigationByRole[user.role] : navigationByRole.student;
   const menuItems = user ? menuItemsByRole[user.role] : [];
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/auth/login');
+  };
+
+  const handleAuthClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    router.push(path);
+  };
 
   return (
     <Disclosure as="nav" className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
@@ -146,7 +157,7 @@ export default function Navbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={logout}
+                              onClick={handleLogout}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block w-full px-4 py-2 text-left text-sm text-gray-700'
@@ -161,18 +172,20 @@ export default function Navbar() {
                   </Menu>
                 ) : (
                   <div className="space-x-4">
-                    <Link
+                    <a
                       href="/auth/login"
+                      onClick={e => handleAuthClick(e, '/auth/login')}
                       className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50"
                     >
                       ログイン
-                    </Link>
-                    <Link
+                    </a>
+                    <a
                       href="/auth/register"
+                      onClick={e => handleAuthClick(e, '/auth/register')}
                       className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400"
                     >
                       新規登録
-                    </Link>
+                    </a>
                   </div>
                 )}
               </div>
@@ -229,7 +242,7 @@ export default function Navbar() {
                     </Disclosure.Button>
                   ))}
                   <Disclosure.Button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="block w-full px-4 py-2 text-left text-base font-medium text-gray-200 hover:bg-indigo-500 hover:text-white"
                   >
                     ログアウト
@@ -240,15 +253,17 @@ export default function Navbar() {
               <div className="border-t border-gray-200 pb-3 pt-4">
                 <div className="space-y-1">
                   <Disclosure.Button
-                    as={Link}
+                    as="a"
                     href="/auth/login"
+                    onClick={e => handleAuthClick(e, '/auth/login')}
                     className="block px-4 py-2 text-base font-medium text-gray-200 hover:bg-indigo-500 hover:text-white"
                   >
                     ログイン
                   </Disclosure.Button>
                   <Disclosure.Button
-                    as={Link}
+                    as="a"
                     href="/auth/register"
+                    onClick={e => handleAuthClick(e, '/auth/register')}
                     className="block px-4 py-2 text-base font-medium text-gray-200 hover:bg-indigo-500 hover:text-white"
                   >
                     新規登録

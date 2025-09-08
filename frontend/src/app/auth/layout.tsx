@@ -11,9 +11,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     // すでにログインしている場合はホームページにリダイレクト
     if (user) {
-      router.push('/');
+      router.replace('/');
     }
   }, [user, router]);
 
-  return <>{children}</>;
+  // ユーザーがログインしていない場合のみ子コンポーネントを表示
+  return !user ? <>{children}</> : null;
 }
