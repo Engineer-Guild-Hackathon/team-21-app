@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..core.security import get_current_active_user
 from ..domain.models.user import User
-from ..domain.models.emotion import EmotionRecord  # 正しいインポートパスに修正
+from ..domain.models.emotion import EmotionRecord
 from ..domain.schemas.emotion import (
     EmotionCreate,
     EmotionResponse,
@@ -41,7 +41,7 @@ async def get_emotion_stats(
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """感情統計を取得"""
     query = db.query(EmotionRecord).filter(EmotionRecord.user_id == current_user.id)
     
