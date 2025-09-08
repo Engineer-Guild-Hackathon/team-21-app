@@ -28,9 +28,12 @@ COPY tsconfig.json ./
 COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 
-# その他のソースコードをコピー
-COPY src ./src
+# publicディレクトリの作成と静的ファイルのコピー
+RUN mkdir -p public
 COPY public ./public
+
+# srcディレクトリのコピー
+COPY src ./src
 
 # アプリケーションのビルド
 ENV NEXT_TELEMETRY_DISABLED 1
