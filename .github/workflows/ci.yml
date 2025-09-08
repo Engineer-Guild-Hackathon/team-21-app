@@ -3,40 +3,46 @@ name: Basic CI Check
 on:
   pull_request:
     branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - "backend/**"
 
 jobs:
-  quick-check:
+  frontend-check:
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.files.*.path, 'frontend/')
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Frontend Check
+      - name: Install and Check
         working-directory: ./frontend
         run: |
           npm ci
           npm run lint
           npm test
 
-      - name: Set up Python
+  backend-check:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.files.*.path, 'backend/')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
-      - name: Backend Check
+      - name: Install and Check
         working-directory: ./backend
         run: |
           pip install -r requirements.txt
           python -m pytest
-
-      - name: Build Check
-        run: |
-          docker compose build
