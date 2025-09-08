@@ -1,4 +1,3 @@
-import asyncio
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -8,6 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+# パスを追加してインポートを可能にする
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.infrastructure.database import Base
