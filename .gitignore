@@ -67,7 +67,5 @@ Thumbs.db
 *~
 
 # .gitignore
-/docs/
-
 /lessons/
 /study/
