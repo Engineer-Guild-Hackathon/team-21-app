@@ -1,67 +1,164 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth, UserRole } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // デモ用のテストアカウント
+  const demoAccounts = [
+    {
+      role: 'student' as UserRole,
+      email: 'student@example.com',
+      password: 'password123',
+      name: '山田太郎',
+      description: '小学5年生',
+    },
+    {
+      role: 'parent' as UserRole,
+      email: 'parent@example.com',
+      password: 'password123',
+      name: '山田花子',
+      description: '太郎の母',
+    },
+    {
+      role: 'teacher' as UserRole,
+      email: 'teacher@example.com',
+      password: 'password123',
+      name: '佐藤先生',
+      description: '5年1組担任',
+    },
+  ];
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       await login(email, password);
-      router.push('/learning'); // ログイン成功後、学習ページへリダイレクト
-    } catch (error) {
+      router.push('/');
+    } catch (err) {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (account: (typeof demoAccounts)[0]) => {
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await login(account.email, account.password);
+      router.push('/');
+    } catch (err) {
+      setError('デモアカウントでのログインに失敗しました。');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold mb-8 text-center">ログイン</h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
+          Non-Cogへようこそ
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          アカウントをお持ちでない方は{' '}
+          <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
+            新規登録
+          </Link>{' '}
+          から
+        </p>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          {error && <div className="mb-4 p-4 text-red-700 bg-red-100 rounded-lg">{error}</div>}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* デモアカウント */}
+          <div className="space-y-4 mb-8">
+            <h3 className="text-lg font-medium text-gray-900">デモアカウント</h3>
+            <div className="grid gap-4">
+              {demoAccounts.map(account => (
+                <button
+                  key={account.role}
+                  onClick={() => handleDemoLogin(account)}
+                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">{account.name}</span>
+                    <span className="text-xs text-gray-500">{account.description}</span>
+                  </div>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    {account.role === 'student' && '生徒'}
+                    {account.role === 'parent' && '保護者'}
+                    {account.role === 'teacher' && '教師'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-2 text-gray-500">または</span>
+            </div>
+          </div>
+
+          {/* ログインフォーム */}
+          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 メールアドレス
               </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 パスワード
               </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
@@ -78,47 +175,29 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <a
+                <Link
                   href="/auth/forgot-password"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
-                  パスワードを忘れた場合
-                </a>
+                  パスワードをお忘れの方
+                </Link>
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                disabled={isLoading}
+                className={`flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                {loading ? 'ログイン中...' : 'ログイン'}
+                {isLoading ? 'ログイン中...' : 'ログイン'}
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">または</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <a
-                href="/auth/register"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                新規アカウント作成
-              </a>
-            </div>
-          </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
