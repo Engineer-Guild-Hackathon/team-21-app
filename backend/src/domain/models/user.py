@@ -1,15 +1,23 @@
-from sqlalchemy import Column, DateTime, Integer, String
-from sqlalchemy.sql import func
+from datetime import datetime
+from typing import Optional
 
-from infrastructure.database import Base
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 
+from ...infrastructure.database import Base
 
 class User(Base):
+    """ユーザーモデル"""
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    full_name = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String)
+    full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, 
+        default=datetime.utcnow, 
+        onupdate=datetime.utcnow
+    )
