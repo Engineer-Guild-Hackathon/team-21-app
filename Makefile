@@ -1,4 +1,4 @@
-.PHONY: setup start stop restart clean test lint logs help install-dev-deps format
+.PHONY: setup start stop restart clean test lint logs help format
 
 # デフォルトのターゲット
 .DEFAULT_GOAL := help
@@ -10,13 +10,8 @@ YELLOW := \033[33m
 RED := \033[31m
 RESET := \033[0m
 
-# Python仮想環境の設定
-VENV = .venv
-PYTHON = $(VENV)/bin/python
-PIP = $(VENV)/bin/pip
-
 # 環境セットアップ
-setup: create-venv install-dev-deps ## 開発環境のセットアップ
+setup: ## 開発環境のセットアップ
 	@echo "$(CYAN)環境をセットアップしています...$(RESET)"
 	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
@@ -24,54 +19,6 @@ setup: create-venv install-dev-deps ## 開発環境のセットアップ
 	fi
 	@docker-compose build
 	@echo "$(GREEN)セットアップが完了しました$(RESET)"
-
-# 仮想環境の作成
-create-venv: ## Python仮想環境を作成
-	@echo "$(CYAN)Python仮想環境を作成しています...$(RESET)"
-	@python3 -m venv $(VENV)
-	@$(PIP) install --upgrade pip
-	@echo "$(GREEN)Python仮想環境を作成しました$(RESET)"
-
-# 開発用依存関係のインストール
-install-dev-deps: install-backend-deps install-frontend-deps install-ml-deps ## 全ての開発用依存関係をインストール
-
-install-backend-deps: ## バックエンドの開発用依存関係をインストール
-	@echo "$(CYAN)バックエンドの開発用依存関係をインストールしています...$(RESET)"
-	@cd backend && $(PIP) install -r requirements.txt
-	@$(PIP) install black isort mypy flake8 pytest pytest-cov
-	@echo "$(GREEN)バックエンドの開発用依存関係をインストールしました$(RESET)"
-
-install-frontend-deps: ## フロントエンドの開発用依存関係をインストール
-	@echo "$(CYAN)フロントエンドの開発用依存関係をインストールしています...$(RESET)"
-	@cd frontend && npm install
-	@echo "$(GREEN)フロントエンドの開発用依存関係をインストールしました$(RESET)"
-
-install-ml-deps: ## MLサービスの開発用依存関係をインストール
-	@echo "$(CYAN)MLサービスの開発用依存関係をインストールしています...$(RESET)"
-	@cd ml && $(PIP) install -r requirements.txt
-	@$(PIP) install black isort mypy flake8 pytest pytest-cov
-	@echo "$(GREEN)MLサービスの開発用依存関係をインストールしました$(RESET)"
-
-# フォーマット
-format: format-backend format-frontend format-ml ## 全てのコードを自動フォーマット
-
-format-backend: ## バックエンドのコードを自動フォーマット
-	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
-	@cd backend && $(VENV)/bin/black .
-	@cd backend && $(VENV)/bin/isort .
-	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
-
-format-frontend: ## フロントエンドのコードを自動フォーマット
-	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
-	@cd frontend && npm run format
-	@cd frontend && npm run lint:fix
-	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
-
-format-ml: ## MLサービスのコードを自動フォーマット
-	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
-	@cd ml && $(VENV)/bin/black .
-	@cd ml && $(VENV)/bin/isort .
-	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
 
 # サービスの制御
 start: ## 全サービスを起動
@@ -100,7 +47,7 @@ dev-frontend: ## フロントエンド開発サーバーを起動
 
 dev-backend: ## バックエンド開発サーバーを起動
 	@echo "$(CYAN)バックエンド開発サーバーを起動しています...$(RESET)"
-	@cd backend && $(PYTHON) -m uvicorn src.main:app --reload
+	@cd backend && python3 -m uvicorn src.main:app --reload
 
 # データベース操作
 db-migrate: ## データベースマイグレーションを実行
@@ -116,7 +63,7 @@ test: test-backend test-frontend test-ml ## 全てのテストを実行
 
 test-backend: ## バックエンドのテストを実行
 	@echo "$(CYAN)バックエンドのテストを実行しています...$(RESET)"
-	@cd backend && $(PYTHON) -m pytest
+	@cd backend && python3 -m pytest
 
 test-frontend: ## フロントエンドのテストを実行
 	@echo "$(CYAN)フロントエンドのテストを実行しています...$(RESET)"
@@ -124,7 +71,36 @@ test-frontend: ## フロントエンドのテストを実行
 
 test-ml: ## MLサービスのテストを実行
 	@echo "$(CYAN)MLサービスのテストを実行しています...$(RESET)"
-	@cd ml && $(PYTHON) -m pytest
+	@cd ml && python3 -m pytest
+
+# フォーマット
+format: ## 全てのコードを自動フォーマット
+	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
+	@cd frontend && npm install && npm run format && npm run lint:fix
+	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
+	
+	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
+	@cd ml && python3 -m black . && python3 -m isort .
+	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
+	
+	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
+	@cd backend && python3 -m black . && python3 -m isort .
+	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
+
+format-frontend: ## フロントエンドのコードを自動フォーマット
+	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
+	@cd frontend && npm install && npm run format && npm run lint:fix
+	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
+
+format-backend: ## バックエンドのコードを自動フォーマット
+	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
+	@cd backend && python3 -m black . && python3 -m isort .
+	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
+
+format-ml: ## MLサービスのコードを自動フォーマット
+	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
+	@cd ml && python3 -m black . && python3 -m isort .
+	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
 
 # リント
 lint: lint-check lint-fix ## 全てのリントチェックと自動修正を実行
@@ -136,39 +112,29 @@ lint-fix: lint-fix-backend lint-fix-frontend lint-fix-ml ## 全ての自動修�
 # バックエンドのリント
 lint-check-backend: ## バックエンドのリントチェックを実行
 	@echo "$(CYAN)バックエンドのリントチェックを実行しています...$(RESET)"
-	@cd backend && $(VENV)/bin/black . --check
-	@cd backend && $(VENV)/bin/isort . --check-only
-	@cd backend && $(VENV)/bin/mypy .
-	@cd backend && $(VENV)/bin/flake8
+	@cd backend && python3 -m black . --check && python3 -m isort . --check-only && python3 -m mypy . && python3 -m flake8
 
 lint-fix-backend: ## バックエンドのリント自動修正を実行
 	@echo "$(CYAN)バックエンドのリント自動修正を実行しています...$(RESET)"
-	@cd backend && $(VENV)/bin/black .
-	@cd backend && $(VENV)/bin/isort .
+	@cd backend && python3 -m black . && python3 -m isort .
 
 # フロントエンドのリント
 lint-check-frontend: ## フロントエンドのリントチェックを実行
 	@echo "$(CYAN)フロントエンドのリントチェックを実行しています...$(RESET)"
-	@cd frontend && npm run lint
-	@cd frontend && npm run type-check
+	@cd frontend && npm run lint && npm run type-check
 
 lint-fix-frontend: ## フロントエンドのリント自動修正を実行
 	@echo "$(CYAN)フロントエンドのリント自動修正を実行しています...$(RESET)"
-	@cd frontend && npm run lint:fix
-	@cd frontend && npm run format
+	@cd frontend && npm run lint:fix && npm run format
 
 # MLサービスのリント
 lint-check-ml: ## MLサービスのリントチェックを実行
 	@echo "$(CYAN)MLサービスのリントチェックを実行しています...$(RESET)"
-	@cd ml && $(VENV)/bin/black . --check
-	@cd ml && $(VENV)/bin/isort . --check-only
-	@cd ml && $(VENV)/bin/mypy .
-	@cd ml && $(VENV)/bin/flake8
+	@cd ml && python3 -m black . --check && python3 -m isort . --check-only && python3 -m mypy . && python3 -m flake8
 
 lint-fix-ml: ## MLサービスのリント自動修正を実行
 	@echo "$(CYAN)MLサービスのリント自動修正を実行しています...$(RESET)"
-	@cd ml && $(VENV)/bin/black .
-	@cd ml && $(VENV)/bin/isort .
+	@cd ml && python3 -m black . && python3 -m isort .
 
 # ログ
 logs: ## サービスのログを表示
@@ -182,7 +148,6 @@ clean: ## 不要なファイルとコンテナを削除
 	@find . -type d -name ".pytest_cache" -exec rm -r {} +
 	@find . -type d -name "node_modules" -exec rm -r {} +
 	@find . -type f -name "*.pyc" -delete
-	@rm -rf $(VENV)
 	@echo "$(GREEN)クリーンアップが完了しました$(RESET)"
 
 # ヘルプ
