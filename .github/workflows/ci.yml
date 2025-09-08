@@ -92,6 +92,10 @@ jobs:
 
   ml-service-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-group: [unit, integration]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
 
@@ -102,6 +106,18 @@ jobs:
           cache: "pip"
           cache-dependency-path: ml/requirements.txt
 
+      # モデルのキャッシュを復元
+      - name: Cache ML models
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/huggingface
+            ~/.cache/torch
+            ml/models
+          key: ${{ runner.os }}-ml-models-${{ hashFiles('ml/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-ml-models-
+
       - name: Install ML Dependencies
         working-directory: ./ml
         run: |
@@ -110,16 +126,30 @@ jobs:
           pip install pytest pytest-cov black isort mypy
 
       - name: Run ML Service Linter
+        if: matrix.test-group == 'unit'
         working-directory: ./ml
         run: |
           black . --check
           isort . --check-only
           mypy .
 
-      - name: Run ML Service Tests
+      - name: Run Unit Tests
+        if: matrix.test-group == 'unit'
         working-directory: ./ml
+        env:
+          PYTORCH_ENABLE_MPS_FALLBACK: 1
+          TEST_MODE: lightweight
         run: |
-          python -m pytest --cov=. --cov-report=xml
+          python -m pytest tests/unit --cov=. --cov-report=xml -v
+
+      - name: Run Integration Tests
+        if: matrix.test-group == 'integration'
+        working-directory: ./ml
+        env:
+          PYTORCH_ENABLE_MPS_FALLBACK: 1
+          TEST_MODE: full
+        run: |
+          python -m pytest tests/integration --cov=. --cov-report=xml -v
 
   # Dockerビルドテストは特定の条件でのみ実行
   docker-build-test:
