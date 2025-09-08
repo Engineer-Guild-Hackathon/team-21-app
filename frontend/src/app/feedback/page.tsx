@@ -1,8 +1,8 @@
-import { Metadata } from "next";
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "フィードバック - 非認知能力学習プラットフォーム",
-  description: "AIによる学習フィードバック",
+  title: 'フィードバック - 非認知能力学習プラットフォーム',
+  description: 'AIによる学習フィードバック',
 };
 
 export default function FeedbackPage() {
@@ -29,9 +29,7 @@ export default function FeedbackPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* コミュニケーションスキル */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-4">
-              コミュニケーションスキル
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">コミュニケーションスキル</h3>
             <div className="space-y-2">
               <div className="flex items-center">
                 <span className="text-green-500 mr-2">●</span>
@@ -69,9 +67,7 @@ export default function FeedbackPage() {
 
           {/* 目標設定とモチベーション */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-4">
-              目標設定とモチベーション
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">目標設定とモチベーション</h3>
             <div className="space-y-2">
               <div className="flex items-center">
                 <span className="text-green-500 mr-2">●</span>
