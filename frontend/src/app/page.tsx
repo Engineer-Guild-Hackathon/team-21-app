@@ -1,8 +1,6 @@
-import Link from "next/link";
-
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-100 to-white">
+    <main className="min-h-screen bg-gradient-to-b from-gray-100 to-white pt-16">
       {/* ヘッダーセクション */}
       <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6">
@@ -39,16 +37,6 @@ export default function Home() {
               詳細な学習記録と分析結果を確認できます。
             </p>
           </div>
-        </div>
-
-        {/* CTAセクション */}
-        <div className="text-center py-8">
-          <Link
-            href="/auth/login"
-            className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            学習を始める
-          </Link>
         </div>
 
         {/* 特徴セクション */}
