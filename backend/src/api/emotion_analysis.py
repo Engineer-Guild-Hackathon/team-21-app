@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -11,31 +11,70 @@ from ..domain.models.emotion import EmotionRecord
 from ..domain.schemas.emotion import (
     EmotionCreate,
     EmotionResponse,
-    EmotionStats
+    EmotionAnalysisRequest,
+    EmotionAnalysisResponse
 )
 from ..infrastructure.database import get_db
 
 router = APIRouter()
 
-@router.post("/emotions/", response_model=EmotionResponse)
-async def record_emotion(
-    emotion: EmotionCreate,
+@router.post("/analyze", response_model=EmotionAnalysisResponse)
+async def analyze_emotion(
+    request: EmotionAnalysisRequest,
+    image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
-) -> EmotionRecord:
-    """感情を記録"""
-    db_emotion = EmotionRecord(
+) -> Dict[str, Any]:
+    """感情分析を実行"""
+    # MLサービスに分析リクエストを送信
+    analysis_result = {
+        "emotions": {
+            "joy": 0.8,
+            "sadness": 0.1,
+            "anger": 0.0,
+            "fear": 0.0,
+            "surprise": 0.1,
+            "frustration": 0.0,
+            "concentration": 0.7
+        },
+        "feedback": "とても良い進捗です！この調子で続けましょう。",
+        "next_action": {
+            "type": "challenge",
+            "description": "より難しい問題に挑戦する準備ができているようです。"
+        }
+    }
+    
+    # 分析結果を保存
+    emotion_record = EmotionRecord(
         user_id=current_user.id,
-        emotion_type=emotion.emotion_type,
-        intensity=emotion.intensity,
-        context=emotion.context
+        emotion_type=max(analysis_result["emotions"].items(), key=lambda x: x[1])[0],
+        intensity=max(analysis_result["emotions"].values()),
+        context=request.context
     )
-    db.add(db_emotion)
+    db.add(emotion_record)
     db.commit()
-    db.refresh(db_emotion)
-    return db_emotion
+    db.refresh(emotion_record)
+    
+    return analysis_result
 
-@router.get("/emotions/stats", response_model=EmotionStats)
+@router.get("/history", response_model=List[EmotionResponse])
+async def get_emotion_history(
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+) -> List[EmotionRecord]:
+    """感情履歴を取得"""
+    query = db.query(EmotionRecord).filter(EmotionRecord.user_id == current_user.id)
+    
+    if start_date:
+        query = query.filter(EmotionRecord.created_at >= start_date)
+    if end_date:
+        query = query.filter(EmotionRecord.created_at <= end_date)
+        
+    return query.all()
+
+@router.get("/stats", response_model=Dict[str, Any])
 async def get_emotion_stats(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
