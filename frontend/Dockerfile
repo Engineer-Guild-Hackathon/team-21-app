@@ -6,7 +6,6 @@ WORKDIR /app
 # 依存関係のインストール
 COPY package*.json ./
 RUN npm install
-RUN npm install -D @tailwindcss/forms
 
 # ソースコードのコピー
 COPY . .
@@ -19,15 +18,25 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# 依存関係のインストール
+# 依存関係のインストール（開発依存関係を含む）
 COPY package*.json ./
-RUN npm install
-RUN npm install -D @tailwindcss/forms
+RUN npm ci
 
-# ソースコードのコピー
-COPY . .
+# 設定ファイルのコピー
+COPY next.config.js ./
+COPY tsconfig.json ./
+COPY postcss.config.js ./
+COPY tailwind.config.ts ./
+
+# publicディレクトリの作成と静的ファイルのコピー
+RUN mkdir -p public
+COPY public ./public
+
+# srcディレクトリのコピー
+COPY src ./src
 
 # アプリケーションのビルド
+ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # 本番環境
@@ -35,15 +44,20 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# 本番環境の依存関係のみをインストール
-COPY package*.json ./
-RUN npm ci --only=production
-RUN npm install -D @tailwindcss/forms
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# ビルド成果物のコピー
-COPY --from=builder /app/.next ./.next
+# package.jsonとpackage-lock.jsonをコピー
+COPY package*.json ./
+
+# 本番環境の依存関係をインストール
+RUN npm ci --omit=dev
+
+# 設定ファイルをコピー
+COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 # 本番サーバーの起動
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
