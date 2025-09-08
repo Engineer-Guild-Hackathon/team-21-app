@@ -17,7 +17,13 @@ setup: ## 開発環境のセットアップ
 		cp .env.example .env; \
 		echo "$(GREEN).envファイルを作成しました$(RESET)"; \
 	fi
-	@docker-compose build
+	@echo "$(CYAN)バックエンドの依存関係をインストールしています...$(RESET)"
+	@cd backend && pip install --upgrade pip && pip install -r requirements.txt || true
+	@echo "$(CYAN)フロントエンドの依存関係をインストールしています...$(RESET)"
+	@cd frontend && npm install || true
+	@echo "$(CYAN)MLサービスの依存関係をインストールしています...$(RESET)"
+	@cd ml && pip install --upgrade pip && pip install -r requirements.txt || true
+	@docker-compose build --no-cache
 	@echo "$(GREEN)セットアップが完了しました$(RESET)"
 
 # サービスの制御

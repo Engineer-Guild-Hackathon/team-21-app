@@ -15,4 +15,5 @@ flake8>=6.1.0
 types-python-jose>=3.3.4
 types-passlib>=1.7.7
 types-sqlalchemy>=1.4.3
-types-alembic>=1.11.1
+sqlalchemy[mypy]>=2.0.0  # SQLAlchemyの型サポート
+typing-extensions>=4.5.0  # 追加の型定義サポート
