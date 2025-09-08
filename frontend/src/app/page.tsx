@@ -1,3 +1,5 @@
+import Image from 'next/legacy/image';
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-100 to-white pt-16">
@@ -33,36 +35,74 @@ export default function Home() {
 
         {/* 特徴セクション */}
         <div className="mt-16">
-          <h2 className="text-3xl font-bold text-center mb-8">主な特徴</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex items-start space-x-4">
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold mb-2">強化学習による適応型システム</h3>
+          <h2 className="text-3xl font-bold text-center mb-12">主な特徴</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="flex items-center">
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <Image
+                  src="/images/ai-analysis.svg"
+                  alt="AI分析"
+                  layout="fill"
+                  objectFit="contain"
+                  priority
+                />
+              </div>
+              <div className="ml-6">
+                <h3 className="text-xl font-semibold mb-2">AI感情分析</h3>
                 <p className="text-gray-600">
-                  学習者の行動パターンを分析し、最適な学習パスを提案します。
+                  学習中の感情状態をリアルタイムで分析し、最適なサポートを提供します。
                 </p>
               </div>
             </div>
-            <div className="flex items-start space-x-4">
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold mb-2">感情分析による学習支援</h3>
+            <div className="flex items-center">
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <Image
+                  src="/images/adaptive-learning.svg"
+                  alt="適応型学習"
+                  layout="fill"
+                  objectFit="contain"
+                />
+              </div>
+              <div className="ml-6">
+                <h3 className="text-xl font-semibold mb-2">適応型学習システム</h3>
                 <p className="text-gray-600">
-                  学習中の感情状態を分析し、モチベーション維持をサポートします。
+                  学習の進捗に応じて、コンテンツの難易度を自動調整します。
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <Image
+                  src="/images/feedback.svg"
+                  alt="フィードバック"
+                  layout="fill"
+                  objectFit="contain"
+                />
+              </div>
+              <div className="ml-6">
+                <h3 className="text-xl font-semibold mb-2">詳細なフィードバック</h3>
+                <p className="text-gray-600">学習の成果と改善点を分かりやすく可視化します。</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <Image
+                  src="/images/progress.svg"
+                  alt="進捗管理"
+                  layout="fill"
+                  objectFit="contain"
+                />
+              </div>
+              <div className="ml-6">
+                <h3 className="text-xl font-semibold mb-2">進捗管理ダッシュボード</h3>
+                <p className="text-gray-600">
+                  学習の進捗状況をグラフや図表で分かりやすく表示します。
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* フッター */}
-      <footer className="bg-gray-800 text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <p>&copy; 2024 非認知能力学習プラットフォーム. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
