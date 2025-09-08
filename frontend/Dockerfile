@@ -22,16 +22,18 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# ソースコードのコピー
-COPY . .
-
 # 設定ファイルのコピー
 COPY next.config.js ./
 COPY tsconfig.json ./
 COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 
+# その他のソースコードをコピー
+COPY src ./src
+COPY public ./public
+
 # アプリケーションのビルド
+ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # 本番環境
@@ -39,17 +41,20 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
 # package.jsonとpackage-lock.jsonをコピー
 COPY package*.json ./
 
 # 本番環境の依存関係をインストール
 RUN npm ci --omit=dev
 
-# ビルド成果物のコピー
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+# 設定ファイルをコピー
 COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/package.json ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 # 本番サーバーの起動
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
