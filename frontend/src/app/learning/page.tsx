@@ -1,9 +1,9 @@
-import { Metadata } from "next";
-import Link from "next/link";
+import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: "学習 - 非認知能力学習プラットフォーム",
-  description: "非認知能力を育む学習コンテンツ",
+  title: '学習 - 非認知能力学習プラットフォーム',
+  description: '非認知能力を育む学習コンテンツ',
 };
 
 export default function LearningPage() {
@@ -14,9 +14,7 @@ export default function LearningPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl">
         {/* コミュニケーションスキル */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">
-            コミュニケーションスキル
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4">コミュニケーションスキル</h2>
           <p className="text-gray-600 mb-4">
             効果的なコミュニケーション方法を学び、対人関係を円滑にします。
           </p>
@@ -31,9 +29,7 @@ export default function LearningPage() {
         {/* 感情コントロール */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-semibold mb-4">感情コントロール</h2>
-          <p className="text-gray-600 mb-4">
-            感情を理解し、適切にコントロールする方法を学びます。
-          </p>
+          <p className="text-gray-600 mb-4">感情を理解し、適切にコントロールする方法を学びます。</p>
           <Link
             href="/learning/emotion-control"
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-block"
@@ -44,9 +40,7 @@ export default function LearningPage() {
 
         {/* 目標設定とモチベーション */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">
-            目標設定とモチベーション
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4">目標設定とモチベーション</h2>
           <p className="text-gray-600 mb-4">
             効果的な目標設定とモチベーション維持の方法を学びます。
           </p>
@@ -75,9 +69,7 @@ export default function LearningPage() {
         {/* 問題解決能力 */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-semibold mb-4">問題解決能力</h2>
-          <p className="text-gray-600 mb-4">
-            創造的な問題解決アプローチと批判的思考を学びます。
-          </p>
+          <p className="text-gray-600 mb-4">創造的な問題解決アプローチと批判的思考を学びます。</p>
           <Link
             href="/learning/problem-solving"
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-block"
@@ -89,9 +81,7 @@ export default function LearningPage() {
         {/* レジリエンス */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-semibold mb-4">レジリエンス</h2>
-          <p className="text-gray-600 mb-4">
-            困難に立ち向かい、回復する力を身につけます。
-          </p>
+          <p className="text-gray-600 mb-4">困難に立ち向かい、回復する力を身につけます。</p>
           <Link
             href="/learning/resilience"
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-block"

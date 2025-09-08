@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useAuth } from "../contexts/AuthContext";
+import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -17,31 +17,19 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <Link
-                  href="/learning"
-                  className="text-gray-700 hover:text-gray-900"
-                >
+                <Link href="/learning" className="text-gray-700 hover:text-gray-900">
                   学習ページ
                 </Link>
-                <Link
-                  href="/progress"
-                  className="text-gray-700 hover:text-gray-900"
-                >
+                <Link href="/progress" className="text-gray-700 hover:text-gray-900">
                   進捗確認
                 </Link>
-                <button
-                  onClick={logout}
-                  className="text-gray-700 hover:text-gray-900"
-                >
+                <button onClick={logout} className="text-gray-700 hover:text-gray-900">
                   ログアウト
                 </button>
               </>
             ) : (
               <>
-                <Link
-                  href="/auth/login"
-                  className="text-gray-700 hover:text-gray-900"
-                >
+                <Link href="/auth/login" className="text-gray-700 hover:text-gray-900">
                   ログイン
                 </Link>
                 <Link
