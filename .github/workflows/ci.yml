@@ -1,6 +1,11 @@
 name: Basic CI Check
 
 on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - "backend/**"
   pull_request:
     branches: [main, develop]
     paths:
@@ -10,7 +15,7 @@ on:
 jobs:
   frontend-check:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.files.*.path, 'frontend/')
+    if: contains(github.event.pull_request.files.*.path, 'frontend/') || contains(github.event.head_commit.modified, 'frontend/')
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +35,7 @@ jobs:
 
   backend-check:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.files.*.path, 'backend/')
+    if: contains(github.event.pull_request.files.*.path, 'backend/') || contains(github.event.head_commit.modified, 'backend/')
     steps:
       - uses: actions/checkout@v4
 
