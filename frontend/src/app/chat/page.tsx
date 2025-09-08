@@ -49,7 +49,7 @@ export default function ChatPage() {
 
   const getEmotionColor = (emotion?: { type: string; intensity: number }) => {
     if (!emotion) return 'bg-gray-100';
-    
+
     const colors: { [key: string]: string } = {
       joy: 'bg-yellow-50',
       sadness: 'bg-blue-50',
@@ -57,7 +57,7 @@ export default function ChatPage() {
       fear: 'bg-purple-50',
       neutral: 'bg-gray-50',
     };
-    
+
     return colors[emotion.type] || 'bg-gray-50';
   };
 
@@ -102,7 +102,7 @@ export default function ChatPage() {
 
     // AIの応答を生成
     const aiResponse = await generateAIResponse(newMessage);
-    
+
     // タイピングアニメーション用の遅延
     await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -156,8 +156,14 @@ export default function ChatPage() {
                 <div className="bg-gray-100 rounded-lg p-4 max-w-md">
                   <div className="flex space-x-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.2s' }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.4s' }}
+                    />
                   </div>
                 </div>
               </div>
