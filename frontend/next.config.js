@@ -2,13 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
-  experimental: {
-    serverActions: true,
-  },
+  output: "standalone",
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

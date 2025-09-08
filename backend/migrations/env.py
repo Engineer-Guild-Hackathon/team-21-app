@@ -1,20 +1,20 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-from infrastructure.database import Base
 from domain.models.user import User  # 必要なモデルをインポート
+from infrastructure.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 # データベースURLを環境変数から取得
-db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/noncog")
+db_url = os.getenv(
+    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/noncog"
+)
 config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
@@ -25,6 +25,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 target_metadata = Base.metadata
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -39,6 +40,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     connectable = engine_from_config(
@@ -48,12 +50,11 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

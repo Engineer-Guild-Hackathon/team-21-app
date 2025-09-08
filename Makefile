@@ -1,4 +1,4 @@
-.PHONY: setup start stop restart clean test lint logs help
+.PHONY: setup start stop restart clean test lint logs help format
 
 # デフォルトのターゲット
 .DEFAULT_GOAL := help
@@ -17,7 +17,7 @@ setup: ## 開発環境のセットアップ
 		cp .env.example .env; \
 		echo "$(GREEN).envファイルを作成しました$(RESET)"; \
 	fi
-	@docker-compose build
+	@docker-compose build --no-cache
 	@echo "$(GREEN)セットアップが完了しました$(RESET)"
 
 # サービスの制御
@@ -47,7 +47,7 @@ dev-frontend: ## フロントエンド開発サーバーを起動
 
 dev-backend: ## バックエンド開発サーバーを起動
 	@echo "$(CYAN)バックエンド開発サーバーを起動しています...$(RESET)"
-	@docker-compose exec backend uvicorn src.main:app --reload
+	@docker-compose exec backend uvicorn src.main:app --reload --host 0.0.0.0
 
 # データベース操作
 db-migrate: ## データベースマイグレーションを実行
@@ -73,16 +73,68 @@ test-ml: ## MLサービスのテストを実行
 	@echo "$(CYAN)MLサービスのテストを実行しています...$(RESET)"
 	@docker-compose exec ml_service pytest
 
+# フォーマット
+format: ## 全てのコードを自動フォーマット
+	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
+	@docker-compose exec frontend sh -c "npm run format && npm run lint:fix"
+	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
+	
+	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
+	@docker-compose exec ml_service sh -c "black . && isort ."
+	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
+	
+	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
+	@docker-compose exec backend sh -c "black . && isort ."
+	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
+
+format-frontend: ## フロントエンドのコードを自動フォーマット
+	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
+	@docker-compose exec frontend sh -c "npm run format && npm run lint:fix"
+	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
+
+format-backend: ## バックエンドのコードを自動フォーマット
+	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
+	@docker-compose exec backend sh -c "black . && isort ."
+	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
+
+format-ml: ## MLサービスのコードを自動フォーマット
+	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
+	@docker-compose exec ml_service sh -c "black . && isort ."
+	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
+
 # リント
-lint: lint-backend lint-frontend ## 全てのリントを実行
+lint: lint-check lint-fix ## 全てのリントチェックと自動修正を実行
 
-lint-backend: ## バックエンドのリントを実行
-	@echo "$(CYAN)バックエンドのリントを実行しています...$(RESET)"
-	@docker-compose exec backend flake8
+lint-check: lint-check-backend lint-check-frontend lint-check-ml ## 全てのリントチェックを実行
 
-lint-frontend: ## フロントエンドのリントを実行
-	@echo "$(CYAN)フロントエンドのリントを実行しています...$(RESET)"
-	@docker-compose exec frontend npm run lint
+lint-fix: lint-fix-backend lint-fix-frontend lint-fix-ml ## 全ての自動修正可能なリント問題を修正
+
+# バックエンドのリント
+lint-check-backend: ## バックエンドのリントチェックを実行
+	@echo "$(CYAN)バックエンドのリントチェックを実行しています...$(RESET)"
+	@docker-compose exec backend sh -c "black . --check && isort . --check-only && mypy . && flake8"
+
+lint-fix-backend: ## バックエンドのリント自動修正を実行
+	@echo "$(CYAN)バックエンドのリント自動修正を実行しています...$(RESET)"
+	@docker-compose exec backend sh -c "black . && isort ."
+
+# フロントエンドのリント
+lint-check-frontend: ## フロントエンドのリントチェックを実行
+	@echo "$(CYAN)フロントエンドのリントチェックを実行しています...$(RESET)"
+	@docker-compose exec frontend sh -c "npm run lint && npm run type-check"
+
+lint-fix-frontend: ## フロントエンドのリント自動修正を実行
+	@echo "$(CYAN)フロントエンドのリント自動修正を実行しています...$(RESET)"
+	@docker-compose exec frontend sh -c "npm run lint:fix && npm run format"
+
+# MLサービスのリント
+lint-check-ml: ## MLサービスのリントチェックを実行
+	@echo "$(CYAN)MLサービスのリントチェックを実行しています...$(RESET)"
+	@docker-compose exec ml_service sh -c "black . --check && isort . --check-only && mypy . && flake8"
+
+lint-fix-ml: ## MLサービスのリント自動修正を実行
+	@echo "$(CYAN)MLサービスのリント自動修正を実行しています...$(RESET)"
+	@docker-compose exec ml_service sh -c "black . && isort ."
 
 # ログ
 logs: ## サービスのログを表示
@@ -91,11 +143,8 @@ logs: ## サービスのログを表示
 # クリーンアップ
 clean: ## 不要なファイルとコンテナを削除
 	@echo "$(YELLOW)クリーンアップを実行しています...$(RESET)"
-	@docker-compose down -v
-	@find . -type d -name "__pycache__" -exec rm -r {} +
-	@find . -type d -name ".pytest_cache" -exec rm -r {} +
-	@find . -type d -name "node_modules" -exec rm -r {} +
-	@find . -type f -name "*.pyc" -delete
+	@docker-compose down -v --remove-orphans
+	@docker system prune -f
 	@echo "$(GREEN)クリーンアップが完了しました$(RESET)"
 
 # ヘルプ

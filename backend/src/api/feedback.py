@@ -3,5 +3,6 @@ from fastapi import APIRouter
 router = APIRouter()
 
 @router.get("/")
-async def get_feedback():
-    return {"message": "フィードバックを取得するエンドポイント（実装予定）"}
+async def get_feedback() -> dict[str, str]:
+    """フィードバックを取得"""
+    return {"feedback": "実装予定"}
