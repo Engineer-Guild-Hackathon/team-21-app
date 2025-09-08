@@ -1,17 +1,25 @@
 'use client';
 
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Bars3Icon, UserCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  AcademicCapIcon,
+  Bars3Icon,
+  ChartBarIcon,
+  ChatBubbleLeftRightIcon,
+  HomeIcon,
+  UserCircleIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Fragment } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const navigation = [
-  { name: 'ホーム', href: '/' },
-  { name: '学習', href: '/learning' },
-  { name: 'フィードバック', href: '/feedback' },
-  { name: '進捗', href: '/progress' },
+  { name: 'ホーム', href: '/', icon: HomeIcon },
+  { name: '学習', href: '/learning', icon: AcademicCapIcon },
+  { name: 'フィードバック', href: '/feedback', icon: ChatBubbleLeftRightIcon },
+  { name: '進捗', href: '/progress', icon: ChartBarIcon },
 ];
 
 function classNames(...classes: string[]) {
@@ -44,6 +52,7 @@ export default function Navbar() {
                         'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
                       )}
                     >
+                      <item.icon className="h-5 w-5 mr-2" />
                       {item.name}
                     </Link>
                   ))}
@@ -68,6 +77,19 @@ export default function Navbar() {
                       leaveTo="transform opacity-0 scale-95"
                     >
                       <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link
+                              href="/profile"
+                              className={classNames(
+                                active ? 'bg-gray-100' : '',
+                                'block px-4 py-2 text-sm text-gray-700'
+                              )}
+                            >
+                              プロフィール
+                            </Link>
+                          )}
+                        </Menu.Item>
                         <Menu.Item>
                           {({ active }) => (
                             <button
@@ -129,9 +151,29 @@ export default function Navbar() {
                     'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
                   )}
                 >
-                  {item.name}
+                  <div className="flex items-center">
+                    <item.icon className="h-5 w-5 mr-2" />
+                    {item.name}
+                  </div>
                 </Disclosure.Button>
               ))}
+              {user && (
+                <Disclosure.Button
+                  as={Link}
+                  href="/profile"
+                  className={classNames(
+                    pathname === '/profile'
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'border-transparent text-gray-200 hover:bg-indigo-500 hover:text-white',
+                    'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                  )}
+                >
+                  <div className="flex items-center">
+                    <UserCircleIcon className="h-5 w-5 mr-2" />
+                    プロフィール
+                  </div>
+                </Disclosure.Button>
+              )}
             </div>
             {!user && (
               <div className="border-t border-gray-200 pb-3 pt-4">
