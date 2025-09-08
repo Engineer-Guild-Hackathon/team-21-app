@@ -58,6 +58,11 @@ db-rollback: ## データベースマイグレーションをロールバック
 	@echo "$(CYAN)データベースマイグレーションをロールバックしています...$(RESET)"
 	@docker-compose exec backend alembic downgrade -1
 
+db-seed: ## データベースに初期データを投入
+	@echo "$(CYAN)初期データを投入しています...$(RESET)"
+	@docker-compose exec backend python -m src.infrastructure.seed_data
+	@echo "$(GREEN)初期データの投入が完了しました$(RESET)"
+
 # テスト
 test: test-backend test-frontend test-ml ## 全てのテストを実行
 
