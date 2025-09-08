@@ -17,12 +17,6 @@ setup: ## 開発環境のセットアップ
 		cp .env.example .env; \
 		echo "$(GREEN).envファイルを作成しました$(RESET)"; \
 	fi
-	@echo "$(CYAN)バックエンドの依存関係をインストールしています...$(RESET)"
-	@cd backend && pip install --upgrade pip && pip install -r requirements.txt || true
-	@echo "$(CYAN)フロントエンドの依存関係をインストールしています...$(RESET)"
-	@cd frontend && npm install || true
-	@echo "$(CYAN)MLサービスの依存関係をインストールしています...$(RESET)"
-	@cd ml && pip install --upgrade pip && pip install -r requirements.txt || true
 	@docker-compose build --no-cache
 	@echo "$(GREEN)セットアップが完了しました$(RESET)"
 
@@ -49,63 +43,63 @@ restart: stop start ## サービスを再起動
 # 開発用コマンド
 dev-frontend: ## フロントエンド開発サーバーを起動
 	@echo "$(CYAN)フロントエンド開発サーバーを起動しています...$(RESET)"
-	@cd frontend && npm run dev
+	@docker-compose exec frontend npm run dev
 
 dev-backend: ## バックエンド開発サーバーを起動
 	@echo "$(CYAN)バックエンド開発サーバーを起動しています...$(RESET)"
-	@cd backend && python3 -m uvicorn src.main:app --reload
+	@docker-compose exec backend uvicorn src.main:app --reload --host 0.0.0.0
 
 # データベース操作
 db-migrate: ## データベースマイグレーションを実行
 	@echo "$(CYAN)データベースマイグレーションを実行しています...$(RESET)"
-	@cd backend && alembic upgrade head
+	@docker-compose exec backend alembic upgrade head
 
 db-rollback: ## データベースマイグレーションをロールバック
 	@echo "$(CYAN)データベースマイグレーションをロールバックしています...$(RESET)"
-	@cd backend && alembic downgrade -1
+	@docker-compose exec backend alembic downgrade -1
 
 # テスト
 test: test-backend test-frontend test-ml ## 全てのテストを実行
 
 test-backend: ## バックエンドのテストを実行
 	@echo "$(CYAN)バックエンドのテストを実行しています...$(RESET)"
-	@cd backend && python3 -m pytest
+	@docker-compose exec backend pytest
 
 test-frontend: ## フロントエンドのテストを実行
 	@echo "$(CYAN)フロントエンドのテストを実行しています...$(RESET)"
-	@cd frontend && npm test
+	@docker-compose exec frontend npm test
 
 test-ml: ## MLサービスのテストを実行
 	@echo "$(CYAN)MLサービスのテストを実行しています...$(RESET)"
-	@cd ml && python3 -m pytest
+	@docker-compose exec ml_service pytest
 
 # フォーマット
 format: ## 全てのコードを自動フォーマット
 	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
-	@cd frontend && npm install && npm run format && npm run lint:fix
+	@docker-compose exec frontend sh -c "npm run format && npm run lint:fix"
 	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
 	
 	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
-	@cd ml && python3 -m black . && python3 -m isort .
+	@docker-compose exec ml_service sh -c "black . && isort ."
 	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
 	
 	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
-	@cd backend && python3 -m black . && python3 -m isort .
+	@docker-compose exec backend sh -c "black . && isort ."
 	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
 
 format-frontend: ## フロントエンドのコードを自動フォーマット
 	@echo "$(CYAN)フロントエンドのコードをフォーマットしています...$(RESET)"
-	@cd frontend && npm install && npm run format && npm run lint:fix
+	@docker-compose exec frontend sh -c "npm run format && npm run lint:fix"
 	@echo "$(GREEN)フロントエンドのコードをフォーマットしました$(RESET)"
 
 format-backend: ## バックエンドのコードを自動フォーマット
 	@echo "$(CYAN)バックエンドのコードをフォーマットしています...$(RESET)"
-	@cd backend && python3 -m black . && python3 -m isort .
+	@docker-compose exec backend sh -c "black . && isort ."
 	@echo "$(GREEN)バックエンドのコードをフォーマットしました$(RESET)"
 
 format-ml: ## MLサービスのコードを自動フォーマット
 	@echo "$(CYAN)MLサービスのコードをフォーマットしています...$(RESET)"
-	@cd ml && python3 -m black . && python3 -m isort .
+	@docker-compose exec ml_service sh -c "black . && isort ."
 	@echo "$(GREEN)MLサービスのコードをフォーマットしました$(RESET)"
 
 # リント
@@ -118,29 +112,29 @@ lint-fix: lint-fix-backend lint-fix-frontend lint-fix-ml ## 全ての自動修�
 # バックエンドのリント
 lint-check-backend: ## バックエンドのリントチェックを実行
 	@echo "$(CYAN)バックエンドのリントチェックを実行しています...$(RESET)"
-	@cd backend && python3 -m black . --check && python3 -m isort . --check-only && python3 -m mypy . && python3 -m flake8
+	@docker-compose exec backend sh -c "black . --check && isort . --check-only && mypy . && flake8"
 
 lint-fix-backend: ## バックエンドのリント自動修正を実行
 	@echo "$(CYAN)バックエンドのリント自動修正を実行しています...$(RESET)"
-	@cd backend && python3 -m black . && python3 -m isort .
+	@docker-compose exec backend sh -c "black . && isort ."
 
 # フロントエンドのリント
 lint-check-frontend: ## フロントエンドのリントチェックを実行
 	@echo "$(CYAN)フロントエンドのリントチェックを実行しています...$(RESET)"
-	@cd frontend && npm run lint && npm run type-check
+	@docker-compose exec frontend sh -c "npm run lint && npm run type-check"
 
 lint-fix-frontend: ## フロントエンドのリント自動修正を実行
 	@echo "$(CYAN)フロントエンドのリント自動修正を実行しています...$(RESET)"
-	@cd frontend && npm run lint:fix && npm run format
+	@docker-compose exec frontend sh -c "npm run lint:fix && npm run format"
 
 # MLサービスのリント
 lint-check-ml: ## MLサービスのリントチェックを実行
 	@echo "$(CYAN)MLサービスのリントチェックを実行しています...$(RESET)"
-	@cd ml && python3 -m black . --check && python3 -m isort . --check-only && python3 -m mypy . && python3 -m flake8
+	@docker-compose exec ml_service sh -c "black . --check && isort . --check-only && mypy . && flake8"
 
 lint-fix-ml: ## MLサービスのリント自動修正を実行
 	@echo "$(CYAN)MLサービスのリント自動修正を実行しています...$(RESET)"
-	@cd ml && python3 -m black . && python3 -m isort .
+	@docker-compose exec ml_service sh -c "black . && isort ."
 
 # ログ
 logs: ## サービスのログを表示
@@ -149,11 +143,8 @@ logs: ## サービスのログを表示
 # クリーンアップ
 clean: ## 不要なファイルとコンテナを削除
 	@echo "$(YELLOW)クリーンアップを実行しています...$(RESET)"
-	@docker-compose down -v
-	@find . -type d -name "__pycache__" -exec rm -r {} +
-	@find . -type d -name ".pytest_cache" -exec rm -r {} +
-	@find . -type d -name "node_modules" -exec rm -r {} +
-	@find . -type f -name "*.pyc" -delete
+	@docker-compose down -v --remove-orphans
+	@docker system prune -f
 	@echo "$(GREEN)クリーンアップが完了しました$(RESET)"
 
 # ヘルプ
