@@ -1,129 +1,175 @@
 'use client';
 
+import {
+  ChartBarIcon,
+  ExclamationTriangleIcon,
+  FaceSmileIcon,
+  FireIcon,
+  HeartIcon,
+} from '@heroicons/react/24/outline';
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 
-interface EmotionAnalysisResult {
-  emotions: {
-    joy: number;
-    sadness: number;
-    anger: number;
-    fear: number;
-    surprise: number;
-    frustration: number;
-    concentration: number;
-  };
-  feedback: string;
-  next_action: {
-    type: string;
-    description: string;
-  };
+interface EmotionData {
+  emotion: string;
+  score: number;
+  color: string;
+  icon: any;
+  description: string;
 }
 
 export default function EmotionAnalysis() {
-  const { user } = useAuth();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<EmotionAnalysisResult | null>(null);
-  const [error, setError] = useState('');
+  const [emotions, setEmotions] = useState<EmotionData[]>([]);
+  const [showTips, setShowTips] = useState(false);
+
+  const emotionMap: { [key: string]: EmotionData } = {
+    joy: {
+      emotion: '喜び',
+      score: 0,
+      color: 'bg-yellow-100 text-yellow-800',
+      icon: FaceSmileIcon,
+      description: '前向きで活力のある状態です。この感情を活かして新しい課題に挑戦してみましょう。',
+    },
+    frustration: {
+      emotion: 'フラストレーション',
+      score: 0,
+      color: 'bg-red-100 text-red-800',
+      icon: ExclamationTriangleIcon,
+      description: '困難を感じている状態です。一度深呼吸して、問題を小さく分解してみましょう。',
+    },
+    motivation: {
+      emotion: 'モチベーション',
+      score: 0,
+      color: 'bg-green-100 text-green-800',
+      icon: FireIcon,
+      description: 'やる気に満ちた状態です。目標を設定して、計画的に進めていきましょう。',
+    },
+    concentration: {
+      emotion: '集中',
+      score: 0,
+      color: 'bg-blue-100 text-blue-800',
+      icon: ChartBarIcon,
+      description: '集中力が高まっている状態です。この状態を維持して課題に取り組みましょう。',
+    },
+  };
 
   const analyzeEmotion = async () => {
-    if (!text.trim()) {
-      setError('テキストを入力してください');
-      return;
-    }
+    if (!text.trim()) return;
 
     setLoading(true);
-    setError('');
-
     try {
-      const response = await fetch('http://localhost:8000/api/emotion-analysis/analyze', {
+      const response = await fetch('/api/emotion-analysis/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({
-          text,
-          context: 'text_input',
-        }),
+        body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) {
-        throw new Error('感情分析に失敗しました');
-      }
+      if (!response.ok) throw new Error('分析に失敗しました');
 
       const data = await response.json();
-      setResult(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '感情分析中にエラーが発生しました');
+      const updatedEmotions = Object.entries(data.emotions).map(([key, score]) => ({
+        ...emotionMap[key],
+        score: score as number,
+      }));
+
+      setEmotions(updatedEmotions);
+      setShowTips(true);
+    } catch (error) {
+      console.error('Error:', error);
+      // エラー処理を実装
     } finally {
       setLoading(false);
     }
   };
 
-  const renderEmotionBars = () => {
-    if (!result) return null;
-
-    return (
-      <div className="space-y-2">
-        {Object.entries(result.emotions).map(([emotion, value]) => (
-          <div key={emotion} className="flex items-center">
-            <span className="w-24 text-sm">{emotion}</span>
-            <div className="flex-1 h-4 bg-gray-200 rounded">
-              <div className="h-full bg-blue-500 rounded" style={{ width: `${value * 100}%` }} />
-            </div>
-            <span className="w-16 text-right text-sm">{(value * 100).toFixed(0)}%</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg shadow">
-      <div>
-        <label htmlFor="emotion-text" className="block text-sm font-medium text-gray-700">
-          あなたの気持ちを教えてください
-        </label>
-        <div className="mt-1">
+    <div className="space-y-6">
+      {/* 入力フォーム */}
+      <div className="space-y-4">
+        <div className="flex flex-col space-y-2">
+          <label htmlFor="emotion-text" className="text-sm font-medium text-gray-700">
+            あなたの気持ちを教えてください
+          </label>
           <textarea
             id="emotion-text"
             rows={4}
-            className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="今の気持ちや状況を自由に書いてください..."
             value={text}
             onChange={e => setText(e.target.value)}
-            placeholder="今の気持ちや状況を入力してください..."
           />
         </div>
+        <button
+          onClick={analyzeEmotion}
+          disabled={loading || !text.trim()}
+          className={`w-full rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm ${
+            loading || !text.trim()
+              ? 'bg-gray-300 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-500'
+          }`}
+        >
+          {loading ? '分析中...' : '感情を分析する'}
+        </button>
       </div>
 
-      {error && <div className="text-red-600 text-sm">{error}</div>}
-
-      <button
-        onClick={analyzeEmotion}
-        disabled={loading}
-        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-      >
-        {loading ? '分析中...' : '感情を分析'}
-      </button>
-
-      {result && (
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">感情分析結果</h3>
-            {renderEmotionBars()}
+      {/* 結果表示 */}
+      {emotions.length > 0 && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {emotions.map(emotion => (
+              <div
+                key={emotion.emotion}
+                className={`rounded-lg p-4 ${emotion.color} flex items-start space-x-4`}
+              >
+                <emotion.icon className="h-6 w-6 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold">{emotion.emotion}</h3>
+                  <div className="mt-1">
+                    <div className="w-full bg-white rounded-full h-2">
+                      <div
+                        className="bg-current h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${emotion.score * 100}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm">{emotion.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">フィードバック</h3>
-            <p className="mt-1 text-sm text-gray-600">{result.feedback}</p>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">次のアクション</h3>
-            <p className="mt-1 text-sm text-gray-600">{result.next_action.description}</p>
-          </div>
+          {/* アドバイスセクション */}
+          {showTips && (
+            <div className="mt-6 bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <HeartIcon className="h-6 w-6 inline-block mr-2 text-pink-500" />
+                あなたへのアドバイス
+              </h3>
+              <div className="space-y-4">
+                {emotions
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 2)
+                  .map(emotion => (
+                    <div key={`tip-${emotion.emotion}`} className="text-gray-600">
+                      <p className="mb-2">
+                        <span className="font-medium">{emotion.emotion}</span>
+                        の感情が強く表れています。
+                      </p>
+                      <p>{emotion.description}</p>
+                    </div>
+                  ))}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-500">
+                    これらの感情を認識することは、学習効果を高める第一歩です。
+                    自分の感情に気づき、それを活かして学習を進めていきましょう。
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

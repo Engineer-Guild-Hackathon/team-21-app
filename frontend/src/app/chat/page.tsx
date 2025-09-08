@@ -1,13 +1,25 @@
 'use client';
 
 import { FaceSmileIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Message {
   id: number;
   content: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  emotion?: {
+    type: string;
+    intensity: number;
+  };
+}
+
+interface AIResponse {
+  message: string;
+  emotion?: {
+    type: string;
+    intensity: number;
+  };
 }
 
 export default function ChatPage() {
@@ -17,9 +29,62 @@ export default function ChatPage() {
       content: 'こんにちは！今日はどんなことを学びたいですか？',
       sender: 'ai',
       timestamp: new Date(),
+      emotion: {
+        type: 'joy',
+        intensity: 0.8,
+      },
     },
   ]);
   const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const getEmotionColor = (emotion?: { type: string; intensity: number }) => {
+    if (!emotion) return 'bg-gray-100';
+    
+    const colors: { [key: string]: string } = {
+      joy: 'bg-yellow-50',
+      sadness: 'bg-blue-50',
+      anger: 'bg-red-50',
+      fear: 'bg-purple-50',
+      neutral: 'bg-gray-50',
+    };
+    
+    return colors[emotion.type] || 'bg-gray-50';
+  };
+
+  const generateAIResponse = async (userMessage: string): Promise<AIResponse> => {
+    try {
+      const response = await fetch('/api/chat/respond', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
+
+      if (!response.ok) throw new Error('AI応答の生成に失敗しました');
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error:', error);
+      return {
+        message: '申し訳ありません。一時的な問題が発生しました。',
+        emotion: {
+          type: 'neutral',
+          intensity: 0.5,
+        },
+      };
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -33,17 +98,24 @@ export default function ChatPage() {
     };
     setMessages(prev => [...prev, userMessage]);
     setNewMessage('');
+    setIsTyping(true);
 
-    // AIの応答を追加（実際のAPIコールに置き換える）
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: messages.length + 2,
-        content: 'ご質問ありがとうございます。一緒に考えていきましょう！',
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    }, 1000);
+    // AIの応答を生成
+    const aiResponse = await generateAIResponse(newMessage);
+    
+    // タイピングアニメーション用の遅延
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // AIの応答を追加
+    const aiMessage: Message = {
+      id: messages.length + 2,
+      content: aiResponse.message,
+      sender: 'ai',
+      timestamp: new Date(),
+      emotion: aiResponse.emotion,
+    };
+    setMessages(prev => [...prev, aiMessage]);
+    setIsTyping(false);
   };
 
   return (
@@ -52,7 +124,9 @@ export default function ChatPage() {
         {/* チャットヘッダー */}
         <div className="bg-white rounded-t-lg shadow-sm p-4 border-b">
           <h1 className="text-xl font-semibold text-gray-900">AIアシスタント</h1>
-          <p className="text-sm text-gray-500">24時間対応で学習をサポートします</p>
+          <p className="text-sm text-gray-500">
+            24時間対応で学習をサポートします。感情を理解し、適切なアドバイスを提供します。
+          </p>
         </div>
 
         {/* メッセージエリア */}
@@ -67,16 +141,28 @@ export default function ChatPage() {
                   className={`rounded-lg p-4 max-w-md ${
                     message.sender === 'user'
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
+                      : `${getEmotionColor(message.emotion)} text-gray-900`
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <p className="text-xs mt-1 opacity-70">
                     {message.timestamp.toLocaleTimeString()}
                   </p>
                 </div>
               </div>
             ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 rounded-lg p-4 max-w-md">
+                  <div className="flex space-x-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
@@ -101,11 +187,11 @@ export default function ChatPage() {
             />
             <button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || isTyping}
               className={`p-2 rounded-lg ${
-                newMessage.trim()
-                  ? 'bg-blue-600 text-white hover:bg-blue-500'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                !newMessage.trim() || isTyping
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-500'
               }`}
             >
               <PaperAirplaneIcon className="h-6 w-6" />
