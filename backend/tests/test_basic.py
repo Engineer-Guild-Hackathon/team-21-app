@@ -1,3 +1,3 @@
-def test_basic():
-    """Basic test to ensure pytest is working"""
+def test_basic() -> None:
+    """基本的なテスト"""
     assert True
