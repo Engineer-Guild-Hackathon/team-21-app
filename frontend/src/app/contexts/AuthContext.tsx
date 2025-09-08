@@ -2,73 +2,46 @@
 
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-interface User {
-  id: number;
+export type UserRole = 'student' | 'parent' | 'teacher';
+
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
   email: string;
-  full_name: string | null;
+  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  isAuthenticated: boolean; // 追加
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => void;
+  register: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE_URL = 'http://localhost:8000';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ページ読み込み時に認証状態を確認
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        localStorage.removeItem('token');
-      }
-    } catch (error) {
-      console.error('認証確認エラー:', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
+    // ローカルストレージからユーザー情報を復元
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-  };
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/token`, {
+      // APIリクエストを実装
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          username: email,
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -76,57 +49,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
-      localStorage.setItem('token', data.access_token);
-      document.cookie = `token=${data.access_token}; path=/`;
-      await checkAuth();
+      const loggedInUser: User = {
+        id: data.id,
+        name: data.name,
+        role: data.role,
+        email: data.email,
+        avatar: data.avatar,
+      };
+
+      setUser(loggedInUser);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
     } catch (error) {
-      console.error('ログインエラー:', error);
-      throw error;
-    }
-  };
-
-  const register = async (email: string, password: string, fullName: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          full_name: fullName,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || '登録に失敗しました');
-      }
-
-      // 登録成功後、自動的にログイン
-      await login(email, password);
-    } catch (error) {
-      console.error('登録エラー:', error);
+      console.error('Login error:', error);
       throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  const register = async (email: string, password: string, role: UserRole, name: string) => {
+    try {
+      // APIリクエストを実装
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, role, name }),
+      });
+
+      if (!response.ok) {
+        throw new Error('登録に失敗しました');
+      }
+
+      const data = await response.json();
+      const newUser: User = {
+        id: data.id,
+        name: data.name,
+        role: data.role,
+        email: data.email,
+      };
+
+      setUser(newUser);
+      localStorage.setItem('user', JSON.stringify(newUser));
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading,
-        isAuthenticated: !!user, // userが存在すれば認証済み
+        isAuthenticated: !!user,
         login,
-        register,
         logout,
+        register,
       }}
     >
       {children}
