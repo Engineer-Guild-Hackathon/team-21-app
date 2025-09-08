@@ -1,5 +1,5 @@
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 
 const navigation = [
@@ -20,7 +20,7 @@ export default function Navigation() {
 
   return (
     <nav className="flex space-x-4">
-      {navigation.map((item) => {
+      {navigation.map(item => {
         // 認証が必要なページへのアクセス制御
         if (!isAuthenticated && item.href !== '/') {
           return null;
@@ -46,7 +46,7 @@ export default function Navigation() {
 
       {/* 認証関連のナビゲーション */}
       {!isAuthenticated &&
-        authNavigation.map((item) => {
+        authNavigation.map(item => {
           const isActive = pathname ? pathname.startsWith(item.href) : false;
 
           return (

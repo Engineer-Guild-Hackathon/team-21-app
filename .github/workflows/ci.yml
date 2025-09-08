@@ -23,9 +23,11 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Run Linter
+      - name: Format and Lint
         working-directory: ./frontend
-        run: npm run lint
+        run: |
+          npm run format
+          npm run lint:fix
 
       - name: Type Check
         working-directory: ./frontend
@@ -38,6 +40,14 @@ jobs:
       - name: Build Check
         working-directory: ./frontend
         run: npm run build
+
+      - name: Commit Format Changes
+        if: github.event_name == 'pull_request'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "style: Auto-format frontend code"
 
   backend-test:
     runs-on: ubuntu-latest
@@ -75,12 +85,17 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov black isort mypy
 
+      - name: Format Backend Code
+        working-directory: ./backend
+        run: |
+          black .
+          isort .
+
       - name: Run Backend Linter
         working-directory: ./backend
         run: |
-          black . --check
-          isort . --check-only
           mypy .
+          flake8
 
       - name: Run Backend Tests
         working-directory: ./backend
@@ -89,6 +104,14 @@ jobs:
           ENVIRONMENT: test
         run: |
           python -m pytest --cov=. --cov-report=xml
+
+      - name: Commit Format Changes
+        if: github.event_name == 'pull_request'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "style: Auto-format backend code"
 
   ml-service-test:
     runs-on: ubuntu-latest
@@ -125,13 +148,18 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov black isort mypy
 
+      - name: Format ML Code
+        working-directory: ./ml
+        run: |
+          black .
+          isort .
+
       - name: Run ML Service Linter
         if: matrix.test-group == 'unit'
         working-directory: ./ml
         run: |
-          black . --check
-          isort . --check-only
           mypy .
+          flake8
 
       - name: Run Unit Tests
         if: matrix.test-group == 'unit'
@@ -150,6 +178,14 @@ jobs:
           TEST_MODE: full
         run: |
           python -m pytest tests/integration --cov=. --cov-report=xml -v
+
+      - name: Commit Format Changes
+        if: github.event_name == 'pull_request'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "style: Auto-format ML service code"
 
   # Dockerビルドテストは特定の条件でのみ実行
   docker-build-test:
@@ -198,3 +234,17 @@ jobs:
           tags: team21-ml:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # PRにフォーマット変更をプッシュ
+  push-format-changes:
+    needs: [frontend-test, backend-test, ml-service-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Push Changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.head_ref }}
