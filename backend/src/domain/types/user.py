@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NewType
+from typing import NewType, Optional
 
 # 値オブジェクト
 UserId = NewType("UserId", int)
@@ -28,8 +28,8 @@ class UserProfile:
     """
 
     full_name: str
-    avatar_url: str | None = None
-    bio: str | None = None
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,6 @@ class UserStatus:
 
     is_active: bool
     is_verified: bool
-    last_login: datetime | None
+    last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
