@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import auth, emotion_analysis, emotions, feedback, learning, users
+from .api.v1 import auth, emotion_analysis, emotions, feedback, learning, users
 
 app = FastAPI(
     title="非認知能力学習プラットフォーム API",
