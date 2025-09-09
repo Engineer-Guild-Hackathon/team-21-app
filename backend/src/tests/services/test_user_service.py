@@ -42,10 +42,10 @@ def sample_user():
 
 
 @pytest.mark.asyncio
-async def test_create_user(user_service, mock_repository):
+async def test_create_user(user_service, mock_repository, sample_user):
     # Arrange
     mock_repository.find_by_email.return_value = None
-    mock_repository.create.return_value = sample_user()
+    mock_repository.create.return_value = sample_user
 
     # Act
     user = await user_service.create_user(
