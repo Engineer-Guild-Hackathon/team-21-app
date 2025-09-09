@@ -5,9 +5,9 @@ from src.core.security import get_current_active_user
 from src.domain.models.user import User
 from src.domain.schemas.user import UserCreate, UserResponse, UserUpdate
 from src.domain.types.user import UserId, UserProfile
-from srcinfrastructure.database import get_db
-from srcinfrastructure.repositories.user_repository import SQLAlchemyUserRepository
-from srcservices.user.user_service import UserService
+from src.infrastructure.database import get_db
+from src.infrastructure.repositories.user_repository import SQLAlchemyUserRepository
+from src.services.user.user_service import UserService
 
 router = APIRouter()
 
