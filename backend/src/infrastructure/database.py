@@ -1,22 +1,24 @@
-from typing import Generator
+from typing import AsyncGenerator
 
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 # データベース設定
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@db:5432/noncog"
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/noncog"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False, autocommit=False, autoflush=False
+)
 
 Base = declarative_base()
 
 
-def get_db() -> Generator[Session, None, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """データベースセッションを取得"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
