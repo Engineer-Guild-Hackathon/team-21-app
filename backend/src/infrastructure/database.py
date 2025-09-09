@@ -12,6 +12,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 def get_db() -> Generator[Session, None, None]:
     """データベースセッションを取得"""
     db = SessionLocal()

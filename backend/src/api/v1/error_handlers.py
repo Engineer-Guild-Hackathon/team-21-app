@@ -1,11 +1,10 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
 from ..ml.error_handling.ml_exceptions import MLBaseException
 
-async def ml_exception_handler(
-    request: Request,
-    exc: MLBaseException
-) -> JSONResponse:
+
+async def ml_exception_handler(request: Request, exc: MLBaseException) -> JSONResponse:
     """MLサービスの例外ハンドラー"""
     return JSONResponse(
         status_code=500,
@@ -13,10 +12,11 @@ async def ml_exception_handler(
             "error": {
                 "code": exc.error_code,
                 "message": str(exc),
-                "details": exc.details
+                "details": exc.details,
             }
-        }
+        },
     )
+
 
 def setup_error_handlers(app):
     """エラーハンドラーの設定"""
