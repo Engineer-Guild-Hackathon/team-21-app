@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.core.security import get_current_active_user
-from srcdomain.models.user import User
-from srcdomain.schemas.emotion import (
+from src.domain.models.user import User
+from src.domain.schemas.emotion import (
     EmotionCreate,
     EmotionResponse,
     EmotionTrendResponse,
 )
-from srcdomain.types.emotion import EmotionAnalysis, UserId
+from src.domain.types.emotion import EmotionAnalysis, UserId
 from srcinfrastructure.database import get_db
 from srcinfrastructure.repositories.emotion_repository import (
     SQLAlchemyEmotionRepository,

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.core.security import get_current_active_user
-from srcdomain.models.user import User
-from srcdomain.schemas.behavior import (
+from src.domain.models.user import User
+from src.domain.schemas.behavior import (
     BehaviorCreate,
     BehaviorGoalCreate,
     BehaviorGoalResponse,
@@ -12,7 +12,7 @@ from srcdomain.schemas.behavior import (
     BehaviorStatisticsResponse,
     BehaviorTriggerResponse,
 )
-from srcdomain.types.behavior import (
+from src.domain.types.behavior import (
     BehaviorCategory,
     BehaviorGoal,
     BehaviorId,
