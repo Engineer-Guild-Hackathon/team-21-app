@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.infrastructure.database import Base, SQLALCHEMY_DATABASE_URL
+from src.infrastructure.database import SQLALCHEMY_DATABASE_URL, Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

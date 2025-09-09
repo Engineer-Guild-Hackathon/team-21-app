@@ -9,7 +9,11 @@ SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/noncog
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False, autocommit=False, autoflush=False
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
 )
 
 Base = declarative_base()
