@@ -31,9 +31,15 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
-      - db
+      db:
+        condition: service_healthy
       - redis
       - kafka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # MLサービス
   ml_service:
@@ -79,6 +85,11 @@ services:
       - POSTGRES_DB=noncog
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Redisキャッシュ
   redis:
