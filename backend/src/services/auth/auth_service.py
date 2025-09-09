@@ -3,7 +3,13 @@ from typing import Optional, Tuple
 
 from sqlalchemy.orm import Session
 
-from ...core.security import create_access_token, verify_password
+from ...core.security import (
+    ALGORITHM,
+    SECRET_KEY,
+    create_access_token,
+    jwt,
+    verify_password,
+)
 from ...domain.models.user import User
 from ...domain.types import Email
 
@@ -59,7 +65,7 @@ class AuthService:
             トークンに対応するユーザー。無効なトークンの場合はNone
         """
         try:
-            payload = decode_token(token)
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             email = payload.get("sub")
             if email is None:
                 return None
