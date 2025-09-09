@@ -23,6 +23,8 @@ class UserUpdate(UserBase):
     """ユーザー更新スキーマ"""
 
     password: Optional[str] = None
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class UserResponse(UserBase):
