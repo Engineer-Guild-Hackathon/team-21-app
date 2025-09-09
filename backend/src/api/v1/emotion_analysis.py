@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from src.core.security import get_current_active_user
-from src.domain.models.emotion import EmotionRecord
+from src.domain.models.emotion import Emotion
 from src.domain.models.user import User
 from src.domain.schemas.emotion import (
     EmotionAnalysisRequest,
@@ -44,7 +44,7 @@ async def analyze_emotion(
     }
 
     # 分析結果を保存
-    emotion_record = EmotionRecord(
+    emotion_record = Emotion(
         user_id=current_user.id,
         emotion_type=max(analysis_result["emotions"].items(), key=lambda x: x[1])[0],
         intensity=max(analysis_result["emotions"].values()),
