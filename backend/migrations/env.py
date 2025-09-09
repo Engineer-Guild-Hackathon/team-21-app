@@ -10,11 +10,13 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.infrastructure.database import Base
+from src.infrastructure.database import Base, SQLALCHEMY_DATABASE_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
