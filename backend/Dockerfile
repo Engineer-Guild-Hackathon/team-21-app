@@ -15,6 +15,9 @@ RUN pip install -r requirements.txt
 # ソースコードのコピー
 COPY . .
 
+# PYTHONPATHの設定
+ENV PYTHONPATH=/app
+
 # 開発サーバーの起動
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
@@ -34,6 +37,9 @@ RUN pip install -r requirements.txt
 
 # ソースコードのコピー
 COPY . .
+
+# PYTHONPATHの設定
+ENV PYTHONPATH=/app
 
 # 本番サーバーの起動
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
