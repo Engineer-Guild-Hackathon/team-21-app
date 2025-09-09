@@ -2,13 +2,13 @@ name: Frontend CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'frontend/**'
+      - "frontend/**"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'frontend/**'
+      - "frontend/**"
 
 jobs:
   test:
@@ -18,29 +18,29 @@ jobs:
         working-directory: ./frontend
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: './frontend/package-lock.json'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run linting
-      run: |
-        npm run lint
-        npm run format:check
+      - name: Run linting
+        run: |
+          npm run lint
+          npm run format:check
 
-    - name: Run tests
-      run: npm test -- --coverage
+      - name: Run tests
+        run: npm test -- --coverage
 
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./frontend/coverage/coverage-final.json
-        flags: frontend
-        name: frontend-coverage
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
