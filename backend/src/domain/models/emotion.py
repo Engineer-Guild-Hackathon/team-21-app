@@ -6,8 +6,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...infrastructure.database import Base
 
+
 class EmotionRecord(Base):
     """感情記録モデル"""
+
     __tablename__ = "emotion_records"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)

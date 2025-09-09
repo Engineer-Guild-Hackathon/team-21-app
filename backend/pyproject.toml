@@ -39,7 +39,7 @@ module = "jose.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["src/tests"]
 python_files = ["test_*.py"]
 addopts = "-v --cov=src --cov-report=term-missing"
 
