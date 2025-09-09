@@ -108,7 +108,7 @@ async def test_update_profile(user_service, mock_repository, sample_user):
 
 
 @pytest.mark.asyncio
-async def test_delete_user(user_service, mock_repository):
+async def test_delete_user(user_service, mock_repository, sample_user):
     # Arrange
     mock_repository.delete.return_value = True
 
