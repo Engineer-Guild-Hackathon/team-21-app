@@ -53,3 +53,10 @@ class EmotionTrendResponse(BaseModel):
     emotion_counts: Dict[str, int]
     trend_direction: str  # "improving", "stable", "declining"
     recommendations: list[str]
+
+class EmotionTrendRequest(BaseModel):
+    """感情トレンドリクエストスキーマ"""
+
+    start_date: datetime
+    end_date: datetime
+    user_id: int

@@ -63,14 +63,14 @@ async def get_emotion_history(
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> List[EmotionRecord]:
+) -> List[Emotion]:
     """感情履歴を取得"""
-    query = db.query(EmotionRecord).filter(EmotionRecord.user_id == current_user.id)
+    query = db.query(Emotion).filter(Emotion.user_id == current_user.id)
 
     if start_date:
-        query = query.filter(EmotionRecord.created_at >= start_date)
+        query = query.filter(Emotion.created_at >= start_date)
     if end_date:
-        query = query.filter(EmotionRecord.created_at <= end_date)
+        query = query.filter(Emotion.created_at <= end_date)
 
     return query.all()
 
@@ -83,12 +83,12 @@ async def get_emotion_stats(
     current_user: User = Depends(get_current_active_user),
 ) -> Dict[str, Any]:
     """感情統計を取得"""
-    query = db.query(EmotionRecord).filter(EmotionRecord.user_id == current_user.id)
+    query = db.query(Emotion).filter(Emotion.user_id == current_user.id)
 
     if start_date:
-        query = query.filter(EmotionRecord.created_at >= start_date)
+        query = query.filter(Emotion.created_at >= start_date)
     if end_date:
-        query = query.filter(EmotionRecord.created_at <= end_date)
+        query = query.filter(Emotion.created_at <= end_date)
 
     # 感情タイプごとの集計
     emotion_counts: Dict[str, int] = {}
@@ -100,7 +100,7 @@ async def get_emotion_stats(
 
     # 平均強度の計算
     avg_intensity = (
-        query.with_entities(func.avg(EmotionRecord.intensity)).scalar() or 0.0
+        query.with_entities(func.avg(Emotion.intensity)).scalar() or 0.0
     )
 
     return {

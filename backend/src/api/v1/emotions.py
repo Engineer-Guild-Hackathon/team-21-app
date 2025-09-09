@@ -5,6 +5,7 @@ from src.domain.models.user import User
 from src.domain.schemas.emotion import (
     EmotionCreate,
     EmotionResponse,
+    EmotionTrendResponse,
 )
 from src.domain.types.emotion import EmotionAnalysis, UserId
 from src.infrastructure.database import get_db

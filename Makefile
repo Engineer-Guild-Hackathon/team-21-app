@@ -52,7 +52,15 @@ dev-backend: ## バックエンド開発サーバーを起動
 # データベース操作
 db-migrate: ## データベースマイグレーションを実行
 	@echo "$(CYAN)データベースマイグレーションを実行しています...$(RESET)"
-	@docker-compose exec backend alembic upgrade head
+	@docker-compose run --rm backend /bin/sh -c "\
+		until pg_isready -h db -U postgres; do \
+			echo 'Waiting for database to be ready...' && sleep 2; \
+		done && \
+		until curl --output /dev/null --silent --fail http://backend:8000/docs; do \
+			echo 'Waiting for backend to be ready...' && sleep 2; \
+		done && \
+		alembic upgrade head"
+	@echo "$(GREEN)マイグレーションが完了しました$(RESET)"
 
 db-rollback: ## データベースマイグレーションをロールバック
 	@echo "$(CYAN)データベースマイグレーションをロールバックしています...$(RESET)"
@@ -60,8 +68,11 @@ db-rollback: ## データベースマイグレーションをロールバック
 
 db-seed: ## データベースに初期データを投入
 	@echo "$(CYAN)初期データを投入しています...$(RESET)"
-	@docker-compose exec backend python -m src.infrastructure.seed_data
+	@docker-compose exec backend python scripts/seed_data.py
 	@echo "$(GREEN)初期データの投入が完了しました$(RESET)"
+
+db-setup: db-migrate db-seed ## データベースのセットアップ（マイグレーション + シードデータ）
+	@echo "$(GREEN)データベースのセットアップが完了しました$(RESET)"
 
 # テスト
 test: test-backend test-frontend test-ml ## 全てのテストを実行
