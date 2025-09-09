@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ...core.security import get_current_active_user
-from ...domain.models.user import User
-from ...domain.schemas.user import UserCreate, UserResponse, UserUpdate
-from ...domain.types.user import UserId, UserProfile
-from ...infrastructure.database import get_db
-from ...infrastructure.repositories.user_repository import SQLAlchemyUserRepository
-from ...services.user.user_service import UserService
+from ....core.security import get_current_active_user
+from ....domain.models.user import User
+from ....domain.schemas.user import UserCreate, UserResponse, UserUpdate
+from ....domain.types.user import UserId, UserProfile
+from ....infrastructure.database import get_db
+from ....infrastructure.repositories.user_repository import SQLAlchemyUserRepository
+from ....services.user.user_service import UserService
 
 router = APIRouter()
 

@@ -1,20 +1,19 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..core.security import get_current_active_user
-from ..domain.models.emotion import EmotionRecord
-from ..domain.models.user import User
-from ..domain.schemas.emotion import (
+from ....core.security import get_current_active_user
+from ....domain.models.emotion import EmotionRecord
+from ....domain.models.user import User
+from ....domain.schemas.emotion import (
     EmotionAnalysisRequest,
     EmotionAnalysisResponse,
-    EmotionCreate,
     EmotionResponse,
 )
-from ..infrastructure.database import get_db
+from ....infrastructure.database import get_db
 
 router = APIRouter()
 
