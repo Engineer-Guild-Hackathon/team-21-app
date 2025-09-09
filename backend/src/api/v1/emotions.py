@@ -1,19 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ....core.security import get_current_active_user
-from ....domain.models.user import User
-from ....domain.schemas.emotion import (
+from srccore.security import get_current_active_user
+from srcdomain.models.user import User
+from srcdomain.schemas.emotion import (
     EmotionCreate,
     EmotionResponse,
     EmotionTrendResponse,
 )
-from ....domain.types.emotion import EmotionAnalysis, UserId
-from ....infrastructure.database import get_db
-from ....infrastructure.repositories.emotion_repository import (
+from srcdomain.types.emotion import EmotionAnalysis, UserId
+from srcinfrastructure.database import get_db
+from srcinfrastructure.repositories.emotion_repository import (
     SQLAlchemyEmotionRepository,
 )
-from ....services.emotion.emotion_service import EmotionService
+from srcservices.emotion.emotion_service import EmotionService
 
 router = APIRouter()
 

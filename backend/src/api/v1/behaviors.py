@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from ....core.security import get_current_active_user
-from ....domain.models.user import User
-from ....domain.schemas.behavior import (
+from srccore.security import get_current_active_user
+from srcdomain.models.user import User
+from srcdomain.schemas.behavior import (
     BehaviorCreate,
     BehaviorGoalCreate,
     BehaviorGoalResponse,
@@ -12,18 +12,18 @@ from ....domain.schemas.behavior import (
     BehaviorStatisticsResponse,
     BehaviorTriggerResponse,
 )
-from ....domain.types.behavior import (
+from srcdomain.types.behavior import (
     BehaviorCategory,
     BehaviorGoal,
     BehaviorId,
     BehaviorMetrics,
     UserId,
 )
-from ....infrastructure.database import get_db
-from ....infrastructure.repositories.behavior_repository import (
+from srcinfrastructure.database import get_db
+from srcinfrastructure.repositories.behavior_repository import (
     SQLAlchemyBehaviorRepository,
 )
-from ....services.behavior.behavior_service import BehaviorService
+from srcservices.behavior.behavior_service import BehaviorService
 
 router = APIRouter()
 
