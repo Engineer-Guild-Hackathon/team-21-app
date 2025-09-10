@@ -2,7 +2,15 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 // 認証が必要なパス
-const protectedPaths = ['/learning', '/progress', '/feedback'];
+const protectedPaths = [
+  '/learning',
+  '/progress',
+  '/feedback',
+  '/dashboard',
+  '/analysis',
+  '/class',
+  '/records',
+];
 
 // 認証不要のパス
 const publicPaths = ['/auth/login', '/auth/register'];
@@ -20,9 +28,10 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ログイン済みユーザーが認証ページにアクセスした場合
+  // ログイン済みユーザーが認証ページにアクセスした場合はロールに応じて案内
   if (publicPaths.includes(pathname) && token) {
-    return NextResponse.redirect(new URL('/learning', request.url));
+    // ひとまず共通ダッシュボードへ（クライアント側でロール別に分岐）
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();

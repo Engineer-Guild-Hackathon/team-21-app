@@ -19,6 +19,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    role: str | None = None
     model_config = ConfigDict(from_attributes=True)
 
 

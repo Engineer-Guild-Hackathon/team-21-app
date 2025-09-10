@@ -1,0 +1,3 @@
+# ML service Python dependencies
+black==24.4.2
+isort==5.13.2

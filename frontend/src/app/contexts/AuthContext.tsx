@@ -15,7 +15,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   register: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
 }
@@ -33,10 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     try {
       // APIリクエストを実装
-      const response = await fetch('http://localhost:8000/api/v1/token', {
+      const response = await fetch('http://localhost:8000/api/auth/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -53,8 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { access_token } = await response.json();
 
+      // クッキーにアクセストークンを保存（middlewareが参照）
+      // 注意: 本番ではHttpOnly/secure属性をサーバー側で設定すること
+      const maxAge = 30 * 60; // 30分（サーバのトークン期限に整合）
+      document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
+
       // ユーザー情報を取得
-      const userResponse = await fetch('http://localhost:8000/api/v1/me', {
+      const userResponse = await fetch('http://localhost:8000/api/users/me', {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
@@ -68,13 +73,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const loggedInUser: User = {
         id: userData.id.toString(),
         name: userData.full_name,
-        role: userData.role as UserRole,
+        role: (userData.role ?? 'student') as UserRole,
         email: userData.email,
         avatar: userData.avatar_url,
       };
 
       setUser(loggedInUser);
       localStorage.setItem('user', JSON.stringify(loggedInUser));
+      return loggedInUser;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -84,6 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    // クッキーの削除（Max-Age=0）
+    document.cookie = 'token=; Path=/; Max-Age=0';
   };
 
   const register = async (email: string, password: string, role: UserRole, name: string) => {

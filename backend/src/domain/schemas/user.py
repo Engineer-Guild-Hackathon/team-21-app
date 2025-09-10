@@ -31,6 +31,7 @@ class UserResponse(UserBase):
     """ユーザーレスポンススキーマ"""
 
     id: int
+    role: str
     created_at: datetime
     updated_at: datetime
 
