@@ -1,7 +1,7 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from ..ml.error_handling.ml_exceptions import MLBaseException
+from ...ml.error_handling.ml_exceptions import MLBaseException
 
 
 async def ml_exception_handler(request: Request, exc: MLBaseException) -> JSONResponse:

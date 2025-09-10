@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ...infrastructure.database import Base
 
 
-class EmotionRecord(Base):
+class Emotion(Base):
     """感情記録モデル"""
 
     __tablename__ = "emotion_records"

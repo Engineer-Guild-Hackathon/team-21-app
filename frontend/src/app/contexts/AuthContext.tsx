@@ -36,25 +36,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       // APIリクエストを実装
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:8000/api/v1/token', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({ email, password }),
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+        }),
       });
 
       if (!response.ok) {
         throw new Error('ログインに失敗しました');
       }
 
-      const data = await response.json();
+      const { access_token } = await response.json();
+
+      // ユーザー情報を取得
+      const userResponse = await fetch('http://localhost:8000/api/v1/me', {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('ユーザー情報の取得に失敗しました');
+      }
+
+      const userData = await userResponse.json();
       const loggedInUser: User = {
-        id: data.id,
-        name: data.name,
-        role: data.role,
-        email: data.email,
-        avatar: data.avatar,
+        id: userData.id.toString(),
+        name: userData.full_name,
+        role: userData.role as UserRole,
+        email: userData.email,
+        avatar: userData.avatar_url,
       };
 
       setUser(loggedInUser);

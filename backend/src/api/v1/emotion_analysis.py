@@ -1,20 +1,19 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..core.security import get_current_active_user
-from ..domain.models.emotion import EmotionRecord
-from ..domain.models.user import User
-from ..domain.schemas.emotion import (
+from src.core.security import get_current_active_user
+from src.domain.models.emotion import Emotion
+from src.domain.models.user import User
+from src.domain.schemas.emotion import (
     EmotionAnalysisRequest,
     EmotionAnalysisResponse,
-    EmotionCreate,
     EmotionResponse,
 )
-from ..infrastructure.database import get_db
+from src.infrastructure.database import get_db
 
 router = APIRouter()
 
@@ -46,7 +45,7 @@ async def analyze_emotion(
     }
 
     # 分析結果を保存
-    emotion_record = EmotionRecord(
+    emotion_record = Emotion(
         user_id=current_user.id,
         emotion_type=max(analysis_result["emotions"].items(), key=lambda x: x[1])[0],
         intensity=max(analysis_result["emotions"].values()),
@@ -65,14 +64,14 @@ async def get_emotion_history(
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-) -> List[EmotionRecord]:
+) -> List[Emotion]:
     """感情履歴を取得"""
-    query = db.query(EmotionRecord).filter(EmotionRecord.user_id == current_user.id)
+    query = db.query(Emotion).filter(Emotion.user_id == current_user.id)
 
     if start_date:
-        query = query.filter(EmotionRecord.created_at >= start_date)
+        query = query.filter(Emotion.created_at >= start_date)
     if end_date:
-        query = query.filter(EmotionRecord.created_at <= end_date)
+        query = query.filter(Emotion.created_at <= end_date)
 
     return query.all()
 
@@ -85,12 +84,12 @@ async def get_emotion_stats(
     current_user: User = Depends(get_current_active_user),
 ) -> Dict[str, Any]:
     """感情統計を取得"""
-    query = db.query(EmotionRecord).filter(EmotionRecord.user_id == current_user.id)
+    query = db.query(Emotion).filter(Emotion.user_id == current_user.id)
 
     if start_date:
-        query = query.filter(EmotionRecord.created_at >= start_date)
+        query = query.filter(Emotion.created_at >= start_date)
     if end_date:
-        query = query.filter(EmotionRecord.created_at <= end_date)
+        query = query.filter(Emotion.created_at <= end_date)
 
     # 感情タイプごとの集計
     emotion_counts: Dict[str, int] = {}
@@ -101,9 +100,7 @@ async def get_emotion_stats(
         )
 
     # 平均強度の計算
-    avg_intensity = (
-        query.with_entities(func.avg(EmotionRecord.intensity)).scalar() or 0.0
-    )
+    avg_intensity = query.with_entities(func.avg(Emotion.intensity)).scalar() or 0.0
 
     return {
         "emotion_counts": emotion_counts,

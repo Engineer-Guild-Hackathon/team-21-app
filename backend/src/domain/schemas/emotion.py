@@ -43,3 +43,21 @@ class EmotionAnalysisResponse(BaseModel):
     emotions: Dict[str, float]
     feedback: str
     next_action: Dict[str, str]
+
+
+class EmotionTrendResponse(BaseModel):
+    """感情トレンドレスポンススキーマ"""
+
+    dominant_emotion: str
+    average_intensity: float
+    emotion_counts: Dict[str, int]
+    trend_direction: str  # "improving", "stable", "declining"
+    recommendations: list[str]
+
+
+class EmotionTrendRequest(BaseModel):
+    """感情トレンドリクエストスキーマ"""
+
+    start_date: datetime
+    end_date: datetime
+    user_id: int

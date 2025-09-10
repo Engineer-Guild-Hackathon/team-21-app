@@ -5,11 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..core.security import get_current_active_user
-from ..domain.models.behavior import ActionType, BehaviorRecord
-from ..domain.models.user import User
-from ..domain.schemas.behavior import BehaviorCreate, BehaviorResponse, BehaviorStats
-from ..infrastructure.database import get_db
+from ...core.security import get_current_active_user
+from ...domain.models.behavior import ActionType, BehaviorRecord
+from ...domain.models.user import User
+from ...domain.schemas.behavior import BehaviorCreate, BehaviorResponse, BehaviorStats
+from ...infrastructure.database import get_db
 
 router = APIRouter()
 

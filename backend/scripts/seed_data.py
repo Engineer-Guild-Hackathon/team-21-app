@@ -1,10 +1,16 @@
 """初期データ投入スクリプト"""
 
+import sys
+from pathlib import Path
+
+# srcディレクトリをPythonパスに追加
+sys.path.append(str(Path(__file__).parent.parent))
+
 from sqlalchemy.orm import Session
 
-from ..core.security import get_password_hash
-from ..domain.models.user import User
-from .database import SessionLocal
+from src.core.security import get_password_hash
+from src.domain.models.user import User
+from src.infrastructure.database import SessionLocal
 
 # デモユーザーデータ
 DEMO_USERS = [
@@ -41,6 +47,7 @@ def create_demo_users(db: Session) -> None:
         # 既存ユーザーチェック
         existing_user = db.query(User).filter(User.email == user_data["email"]).first()
         if existing_user:
+            print(f"ユーザー {user_data['email']} は既に存在します")
             continue
 
         # パスワードのハッシュ化
@@ -56,6 +63,7 @@ def create_demo_users(db: Session) -> None:
             is_verified=user_data["is_verified"],
         )
         db.add(user)
+        print(f"ユーザー {user_data['email']} を作成しました")
 
     db.commit()
 
