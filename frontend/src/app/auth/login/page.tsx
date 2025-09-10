@@ -44,8 +44,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/');
+      const loggedIn = await login(email, password);
+      // ロール別に遷移
+      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
+        router.push('/dashboard');
+      } else {
+        router.push('/learning');
+      }
     } catch (err) {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     } finally {
@@ -58,8 +63,12 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(account.email, account.password);
-      router.push('/');
+      const loggedIn = await login(account.email, account.password);
+      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
+        router.push('/dashboard');
+      } else {
+        router.push('/learning');
+      }
     } catch (err) {
       setError('デモアカウントでのログインに失敗しました。');
     } finally {
