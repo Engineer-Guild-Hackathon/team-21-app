@@ -7,8 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 # データベース設定 - 環境変数から動的に読み取り
 SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+asyncpg://postgres:postgres@db:5432/noncog"
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/noncog"
 )
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
