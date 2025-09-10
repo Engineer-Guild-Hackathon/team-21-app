@@ -30,3 +30,7 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+
+# リレーション解決のために明示的に読み込む（テスト時の単独import対策）
+from .emotion import Emotion  # noqa: E402,F401
