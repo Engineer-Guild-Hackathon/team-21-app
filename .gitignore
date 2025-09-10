@@ -71,3 +71,12 @@ Thumbs.db
 /study/
 /docs/
 /docs/tech-stack/
+
+# K8s
+k8s/secrets.yaml
+k8s/*.secret.yaml
+k8s/*.secret.yml
+k8s/temp/
+k8s/backup/
+k8s/*.bak
+k8s/*.tmp

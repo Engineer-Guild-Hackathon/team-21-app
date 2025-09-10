@@ -36,7 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<User> => {
     try {
       // APIリクエストを実装
-      const response = await fetch('http://localhost:8000/api/auth/token', {
+      const apiBase = 'https://api.34.107.156.246.nip.io';
+      const response = await fetch(`${apiBase}/api/auth/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
 
       // ユーザー情報を取得
-      const userResponse = await fetch('http://localhost:8000/api/users/me', {
+      const userResponse = await fetch(`${apiBase}/api/users/me`, {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },

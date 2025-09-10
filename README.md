@@ -13,7 +13,7 @@
 
 ## デモ　/ プレゼン資料
 
-- デモ URL:
+- デモ URL: https://app.34.107.156.246.nip.io
 - プレゼン URL：
 
 ---
@@ -42,6 +42,19 @@ Non-Cog は、生徒の非認知能力を育成するための革新的な学習
   - 学習者の行動パターンの分析
   - 最適な学習パスの自動生成
   - 効果的な学習戦略の提案
+
+## 本番環境
+
+### デモアクセス
+
+- **アプリケーション**: https://app.34.107.156.246.nip.io
+- **API ドキュメント**: https://api.34.107.156.246.nip.io/docs
+
+### デモアカウント
+
+- **生徒**: 山田太郎 (student@example.com / password123)
+- **保護者**: 山田花子 (parent@example.com / password123)
+- **教師**: 佐藤先生 (teacher@example.com / password123)
 
 ## 開発環境のセットアップ
 
@@ -103,6 +116,14 @@ make lint
 
 ### 各サービスのアクセス
 
+#### 本番環境（GKE）
+
+- フロントエンド: https://app.34.107.156.246.nip.io
+- バックエンド API: https://api.34.107.156.246.nip.io
+- API ドキュメント: https://api.34.107.156.246.nip.io/docs
+
+#### 開発環境（ローカル）
+
 - フロントエンド: http://localhost:3000
 - バックエンド API: http://localhost:8000
 - ML サービス: http://localhost:8001
@@ -135,8 +156,18 @@ make lint
 
 ### インフラストラクチャ
 
+#### 本番環境
+
+- Google Kubernetes Engine (GKE)
+- Google Cloud SQL (PostgreSQL)
+- Google Artifact Registry
+- Google Cloud Load Balancer
+- SSL/TLS 証明書 (Managed Certificate)
+
+#### 開発環境
+
 - Docker
-- Kubernetes
+- Docker Compose
 - Apache Kafka
 - Apache Spark
 
@@ -158,6 +189,29 @@ make lint
 - refactor: リファクタリング
 - test: テストコード
 - chore: ビルド・補助ツール
+
+---
+
+## アーキテクチャ概要
+
+### 開発環境アーキテクチャ
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Docker Compose                          │
+├─────────────────────────────────────────────────────────────┤
+│  Frontend (Next.js) - Port 3000                           │
+│  Backend (FastAPI) - Port 8000                            │
+│  ML Service - Port 8001                                   │
+│  PostgreSQL - Port 5432                                   │
+│  Redis - Port 6379                                        │
+│  Kafka - Port 9092                                        │
+│  Spark Master - Port 8080                                 │
+│  MLflow - Port 5000                                       │
+│  Prometheus - Port 9090                                   │
+│  Grafana - Port 3001                                      │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
