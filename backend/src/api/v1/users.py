@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from src.core.security import get_current_active_user
 from src.domain.models.user import User
 from src.domain.schemas.user import UserCreate, UserResponse, UserUpdate

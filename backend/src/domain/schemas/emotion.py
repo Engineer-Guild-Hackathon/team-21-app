@@ -54,6 +54,7 @@ class EmotionTrendResponse(BaseModel):
     trend_direction: str  # "improving", "stable", "declining"
     recommendations: list[str]
 
+
 class EmotionTrendRequest(BaseModel):
     """感情トレンドリクエストスキーマ"""
 

@@ -1,5 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from srcinfrastructure.database import get_db
+from srcinfrastructure.repositories.behavior_repository import (
+    SQLAlchemyBehaviorRepository,
+)
+from srcservices.behavior.behavior_service import BehaviorService
 
 from src.core.security import get_current_active_user
 from src.domain.models.user import User
@@ -19,11 +24,6 @@ from src.domain.types.behavior import (
     BehaviorMetrics,
     UserId,
 )
-from srcinfrastructure.database import get_db
-from srcinfrastructure.repositories.behavior_repository import (
-    SQLAlchemyBehaviorRepository,
-)
-from srcservices.behavior.behavior_service import BehaviorService
 
 router = APIRouter()
 

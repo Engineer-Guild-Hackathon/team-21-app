@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
 from src.core.security import get_current_active_user
 from src.domain.models.emotion import Emotion
 from src.domain.models.user import User
@@ -99,9 +100,7 @@ async def get_emotion_stats(
         )
 
     # 平均強度の計算
-    avg_intensity = (
-        query.with_entities(func.avg(Emotion.intensity)).scalar() or 0.0
-    )
+    avg_intensity = query.with_entities(func.avg(Emotion.intensity)).scalar() or 0.0
 
     return {
         "emotion_counts": emotion_counts,
