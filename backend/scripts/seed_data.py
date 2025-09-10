@@ -1,13 +1,14 @@
 """初期データ投入スクリプト"""
 
+import asyncio
 import sys
 from pathlib import Path
 
 # srcディレクトリをPythonパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
 
-from sqlalchemy.orm import Session
-
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.security import get_password_hash
 from src.domain.models.user import User
 from src.infrastructure.database import SessionLocal
@@ -41,11 +42,12 @@ DEMO_USERS = [
 ]
 
 
-def create_demo_users(db: Session) -> None:
+async def create_demo_users(db: AsyncSession) -> None:
     """デモユーザーの作成"""
     for user_data in DEMO_USERS:
         # 既存ユーザーチェック
-        existing_user = db.query(User).filter(User.email == user_data["email"]).first()
+        result = await db.execute(select(User).where(User.email == user_data["email"]))
+        existing_user = result.scalar_one_or_none()
         if existing_user:
             print(f"ユーザー {user_data['email']} は既に存在します")
             continue
@@ -65,18 +67,15 @@ def create_demo_users(db: Session) -> None:
         db.add(user)
         print(f"ユーザー {user_data['email']} を作成しました")
 
-    db.commit()
+    await db.commit()
 
 
-def main() -> None:
+async def main() -> None:
     """メイン実行関数"""
-    db = SessionLocal()
-    try:
-        create_demo_users(db)
+    async with SessionLocal() as db:
+        await create_demo_users(db)
         print("デモユーザーの作成が完了しました")
-    finally:
-        db.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
