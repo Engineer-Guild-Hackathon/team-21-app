@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...infrastructure.database import Base
 
@@ -23,3 +23,14 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+    # リレーションシップ
+    emotion_records = relationship(
+        "Emotion",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+
+# リレーション解決のために明示的に読み込む（テスト時の単独import対策）
+from .emotion import Emotion  # noqa: E402,F401

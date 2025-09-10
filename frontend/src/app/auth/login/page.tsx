@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth, UserRole } from '../../contexts/AuthContext';
 
@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const redirect = searchParams?.get('redirect');
 
   // デモ用のテストアカウント
   const demoAccounts = [
@@ -44,8 +46,18 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      router.push('/');
+      const loggedIn = await login(email, password);
+      // redirect クエリがある場合は最優先
+      if (redirect) {
+        router.push(redirect);
+        return;
+      }
+      // ロール別に遷移
+      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
+        router.push('/dashboard');
+      } else {
+        router.push('/learning');
+      }
     } catch (err) {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     } finally {
@@ -58,8 +70,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(account.email, account.password);
-      router.push('/');
+      const loggedIn = await login(account.email, account.password);
+      // redirect クエリがある場合は最優先
+      if (redirect) {
+        router.push(redirect);
+        return;
+      }
+      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
+        router.push('/dashboard');
+      } else {
+        router.push('/learning');
+      }
     } catch (err) {
       setError('デモアカウントでのログインに失敗しました。');
     } finally {
