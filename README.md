@@ -188,6 +188,14 @@ make db-migrate
 
 ### **MLOps ダッシュボード**
 
+#### **本番環境**
+
+- **🔬 MLflow**: [https://mlflow.34.107.156.246.nip.io](https://mlflow.34.107.156.246.nip.io) - ML 実験追跡
+- **📊 Grafana**: [https://grafana.34.107.156.246.nip.io](https://grafana.34.107.156.246.nip.io) - 分析ダッシュボード (admin/admin123)
+- **📈 Prometheus**: [https://prometheus.34.107.156.246.nip.io](https://prometheus.34.107.156.246.nip.io) - メトリクス収集
+
+#### **開発環境**
+
 - **🔬 MLflow**: [http://localhost:5000](http://localhost:5000) - ML 実験追跡
 - **📊 Grafana**: [http://localhost:3001](http://localhost:3001) - 分析ダッシュボード
 - **📈 Prometheus**: [http://localhost:9090](http://localhost:9090) - メトリクス収集
@@ -331,7 +339,6 @@ make db-migrate
 - **🚀 最優秀ユーザー体験賞** - ゲーミフィケーション学習プラットフォーム
 
 ---
-
 
 <div align="center">
 
