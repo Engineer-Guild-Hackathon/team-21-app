@@ -30,7 +30,8 @@ export function middleware(request: NextRequest) {
 
   // ログイン済みユーザーが認証ページにアクセスした場合はロールに応じて案内
   if (publicPaths.includes(pathname) && token) {
-    // ひとまず共通ダッシュボードへ（クライアント側でロール別に分岐）
+    // クライアント側でロール別に分岐するため、一旦ダッシュボードへ
+    // 実際のロール別リダイレクトはAuthContextで処理
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
