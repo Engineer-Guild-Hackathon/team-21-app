@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,13 +11,43 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS設定
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+
+# CORS設定 - 環境変数から動的に読み取り
+def get_allowed_origins():
+    """環境変数から許可されたオリジンを取得"""
+    # デフォルトのオリジン（開発環境用）
+    default_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-    ],
+    ]
+
+    # 環境変数から追加のオリジンを取得
+    allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+    if allowed_origins_env:
+        # カンマ区切りで複数のオリジンが設定されている場合
+        additional_origins = [
+            origin.strip() for origin in allowed_origins_env.split(",")
+        ]
+        return default_origins + additional_origins
+
+    # 環境変数が設定されていない場合、環境に応じてオリジンを決定
+    environment = os.getenv("ENVIRONMENT", "development")
+
+    if environment == "production":
+        # 本番環境用のオリジン
+        production_origins = [
+            "http://app.34.107.156.246.nip.io",
+            "https://app.34.107.156.246.nip.io",
+        ]
+        return default_origins + production_origins
+    else:
+        # 開発環境ではローカルオリジンのみ
+        return default_origins
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
