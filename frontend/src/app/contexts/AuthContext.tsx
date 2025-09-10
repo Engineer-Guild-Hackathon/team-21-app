@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // クッキーにアクセストークンを保存（middlewareが参照）
       // 注意: 本番ではHttpOnly/secure属性をサーバー側で設定すること
-      const maxAge = 60 * 60; // 1時間
+      const maxAge = 30 * 60; // 30分（サーバのトークン期限に整合）
       document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
 
       // ユーザー情報を取得
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const loggedInUser: User = {
         id: userData.id.toString(),
         name: userData.full_name,
-        role: userData.role as UserRole,
+        role: (userData.role ?? 'student') as UserRole,
         email: userData.email,
         avatar: userData.avatar_url,
       };

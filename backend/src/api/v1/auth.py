@@ -3,8 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.security import (
     authenticate_user,
     create_access_token,
@@ -23,9 +22,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> Token:
-    user = authenticate_user(db, form_data.username, form_data.password)
+    user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -40,9 +39,14 @@ async def login_for_access_token(
 
 
 @router.post("/register", response_model=UserResponse)
-async def register_user(user_data: UserCreate, db: Session = Depends(get_db)) -> User:
+async def register_user(
+    user_data: UserCreate, db: AsyncSession = Depends(get_db)
+) -> User:
     # メールアドレスの重複チェック
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    from sqlalchemy import select
+
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    existing_user = result.scalar_one_or_none()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -59,8 +63,8 @@ async def register_user(user_data: UserCreate, db: Session = Depends(get_db)) ->
         full_name=user_data.full_name,
     )
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
 
     return db_user
 
