@@ -30,13 +30,19 @@ def get_allowed_origins():
         ]
         return default_origins + additional_origins
 
-    # 本番環境用のデフォルトオリジンも追加
-    production_origins = [
-        "http://app.34.107.156.246.nip.io",
-        "https://app.34.107.156.246.nip.io",
-    ]
+    # 環境変数が設定されていない場合、環境に応じてオリジンを決定
+    environment = os.getenv("ENVIRONMENT", "development")
 
-    return default_origins + production_origins
+    if environment == "production":
+        # 本番環境用のオリジン
+        production_origins = [
+            "http://app.34.107.156.246.nip.io",
+            "https://app.34.107.156.246.nip.io",
+        ]
+        return default_origins + production_origins
+    else:
+        # 開発環境ではローカルオリジンのみ
+        return default_origins
 
 
 app.add_middleware(
