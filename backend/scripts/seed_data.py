@@ -15,24 +15,24 @@ from src.infrastructure.database import SessionLocal
 # デモユーザーデータ
 DEMO_USERS = [
     {
-        "email": "student@example.com",
-        "password": "password123",
+        "email": "taro@example.com",
+        "password": "demo1234",
         "full_name": "山田太郎",
         "role": "student",
         "is_active": True,
         "is_verified": True,
     },
     {
-        "email": "parent@example.com",
-        "password": "password123",
+        "email": "hanako@example.com",
+        "password": "demo1234",
         "full_name": "山田花子",
         "role": "parent",
         "is_active": True,
         "is_verified": True,
     },
     {
-        "email": "teacher@example.com",
-        "password": "password123",
+        "email": "sato@example.com",
+        "password": "demo1234",
         "full_name": "佐藤先生",
         "role": "teacher",
         "is_active": True,
