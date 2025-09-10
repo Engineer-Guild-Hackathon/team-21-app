@@ -167,7 +167,7 @@ export default function AnalysisPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                {user.role === 'parent' ? '子どもの学習分析' : '生徒分析'}
+                {user?.role === 'parent' ? '子どもの学習分析' : '生徒分析'}
               </h1>
               <p className="mt-2 text-gray-600">
                 {childProgress.name} ({childProgress.grade})
