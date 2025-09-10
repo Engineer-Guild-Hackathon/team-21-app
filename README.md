@@ -159,8 +159,93 @@ make lint
 - test: テストコード
 - chore: ビルド・補助ツール
 
-詳細な技術仕様とガイドラインについては、[project.md](./project.md)を参照してください。
+---
 
-## ライセンス
+## クリーンアーキテクチャ（開発環境/構成）
 
-MIT License
+このプロジェクトはモノレポ構成です。レイヤ責務は概ね以下の通りです。
+
+- frontend: UI/UX（Next.js App Router、`middleware.ts` で認可）
+- backend: API（FastAPI）
+  - `src/domain`: ドメインモデル/スキーマ/型
+  - `src/services`: ユースケース（ドメインロジック）
+  - `src/infrastructure`: DB 接続/リポジトリ/設定
+  - `src/api/v1`: ルータ（入出力境界）
+  - 認証は `src/core/security.py` と `api/v1/auth.py` に集約（JWT）
+- ml: 補助的な ML サービス（将来の拡張を想定）
+
+参考ディレクトリ
+
+```
+backend/
+  src/
+    api/v1/            # ルータ
+    core/              # セキュリティ/共通
+    domain/
+      models/          # SQLAlchemy モデル
+      schemas/         # Pydantic スキーマ
+      types/           # 型・値オブジェクト
+    infrastructure/
+      database.py      # AsyncSession / Engine
+      repositories/    # DB アクセス
+    services/          # アプリケーションサービス
+  alembic/
+    versions/          # マイグレーション
+```
+
+### 非同期実装（バックエンド）
+
+- DB は `AsyncSession` を使用。
+- 認証フローは `/api/auth/token` → JWT 発行 → `/api/users/me` でユーザー取得。
+
+### マイグレーション運用
+
+- 生成: `alembic revision -m "message"`（コンテナ内）
+- 適用: `make db-migrate` / `docker-compose exec backend alembic upgrade head`
+- 破綻時は `upgrade heads` で分岐解消、最終手段として `make clean` で初期化。
+
+---
+
+## コード品質管理
+
+### Lint / Format / Type Check / Test
+
+- フロント（Next.js）
+  - Format: Prettier（`make format-frontend`）
+  - Lint: ESLint（`make lint-check-frontend`）
+- バックエンド（FastAPI）
+  - Format: Black / isort（`make format-backend`）
+  - Lint: Flake8 / mypy（`make lint-check-backend`）
+- ML サービス
+  - Black / isort を `ml/requirements.txt` に記載。`make format-ml`
+- テスト
+  - まとめて: `make test`
+  - 個別: `docker-compose exec backend pytest -q`
+
+### 推奨: pre-commit フック
+
+`pre-commit` を導入するとコミット前に自動で品質チェック/整形が走ります。
+
+```
+pip install pre-commit
+pre-commit install
+```
+
+`.pre-commit-config.yaml` 例（抜粋）
+
+```
+- repo: https://github.com/psf/black
+  rev: 24.4.2
+  hooks:
+    - id: black
+- repo: https://github.com/pycqa/isort
+  rev: 5.13.2
+  hooks:
+    - id: isort
+```
+
+### CI（任意）
+
+- PR 時に Lint/TypeCheck/Test を実行するワークフローを `.github/workflows/ci.yml` へ配置推奨。
+
+---
