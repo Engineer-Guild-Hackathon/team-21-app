@@ -6,11 +6,22 @@ import {
   ChatBubbleBottomCenterTextIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import EmotionAnalysis from '../components/EmotionAnalysis';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LearningPage() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.replace('/auth/login?redirect=/learning');
+      return;
+    }
+  }, [user, router]);
 
   const navigation = [
     {
@@ -32,6 +43,10 @@ export default function LearningPage() {
       current: pathname === '/chat',
     },
   ];
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-gray-50">

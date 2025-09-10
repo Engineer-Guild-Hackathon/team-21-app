@@ -30,6 +30,36 @@ spec:
                 name: backend
                 port:
                   number: 80
+    - host: grafana.34.107.156.246.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 80
+    - host: prometheus.34.107.156.246.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus
+                port:
+                  number: 80
+    - host: mlflow.34.107.156.246.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mlflow
+                port:
+                  number: 80
 ---
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
@@ -40,3 +70,6 @@ spec:
   domains:
     - app.34.107.156.246.nip.io
     - api.34.107.156.246.nip.io
+    - grafana.34.107.156.246.nip.io
+    - prometheus.34.107.156.246.nip.io
+    - mlflow.34.107.156.246.nip.io

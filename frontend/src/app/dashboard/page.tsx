@@ -15,6 +15,11 @@ export default function DashboardPage() {
       return;
     }
     // ロール別の最適ダッシュボードへ転送
+    if (user.role === 'student') {
+      // 生徒: 学習ダッシュボードへ転送
+      router.replace('/learning');
+      return;
+    }
     if (user.role === 'parent') {
       // 保護者: 子どもの進捗ダッシュボード
       // 実装が未整備の場合は共通UIを表示
