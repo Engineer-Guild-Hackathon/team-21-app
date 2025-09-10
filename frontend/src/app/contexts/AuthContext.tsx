@@ -86,60 +86,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, rememberMe: boolean = false) => {
     try {
-      // APIリクエストを実装
-      const params = new URLSearchParams({
-        username: email,
-        password: password,
-        grant_type: 'password',
-      });
-
-      const response = await fetch(AUTH_ENDPOINTS.TOKEN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
+      // デモ用のログイン機能
+      const demoUsers = [
+        {
+          id: '1',
+          name: '山田太郎',
+          role: 'student' as UserRole,
+          email: 'taro@example.com',
+          password: 'demo1234',
         },
-        body: params,
-        mode: 'cors',
-        credentials: 'include',
-      }).catch(error => {
-        throw new AuthError('ネットワークエラーが発生しました', AuthErrorCode.NETWORK_ERROR, error);
-      });
+        {
+          id: '2',
+          name: '山田花子',
+          role: 'parent' as UserRole,
+          email: 'hanako@example.com',
+          password: 'demo1234',
+        },
+        {
+          id: '3',
+          name: '佐藤先生',
+          role: 'teacher' as UserRole,
+          email: 'sato@example.com',
+          password: 'demo1234',
+        },
+      ];
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const status = response.status;
+      // デモユーザーを検索
+      const demoUser = demoUsers.find(user => user.email === email && user.password === password);
 
-        if (status === 401) {
-          throw new AuthError(
-            'メールアドレスまたはパスワードが正しくありません',
-            AuthErrorCode.INVALID_CREDENTIALS,
-            errorData
-          );
-        } else if (status === 422) {
-          throw new AuthError(
-            '入力内容に誤りがあります',
-            AuthErrorCode.VALIDATION_ERROR,
-            errorData
-          );
-        } else if (status >= 500) {
-          throw new AuthError(
-            'サーバーエラーが発生しました',
-            AuthErrorCode.SERVER_ERROR,
-            errorData
-          );
-        } else {
-          throw new AuthError(
-            errorData.detail || 'ログインに失敗しました',
-            AuthErrorCode.UNKNOWN,
-            errorData
-          );
-        }
+      if (!demoUser) {
+        throw new AuthError(
+          'メールアドレスまたはパスワードが正しくありません',
+          AuthErrorCode.INVALID_CREDENTIALS
+        );
       }
 
-      const { access_token, refresh_token, token_type } = await response.json().catch(error => {
-        throw new AuthError('レスポンスの解析に失敗しました', AuthErrorCode.SERVER_ERROR, error);
-      });
+      // デモ用のトークンを生成
+      const access_token = `demo_token_${Date.now()}`;
+      const token_type = 'bearer';
 
       // トークンをローカルストレージに保存
       localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN, access_token);
@@ -147,54 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN_TIMESTAMP, Date.now().toString());
       localStorage.setItem(AUTH_STORAGE_KEYS.REMEMBER_ME, rememberMe.toString());
 
-      // リフレッシュトークンは「ログイン状態を保持」が有効な場合のみ保存
-      if (rememberMe && refresh_token) {
-        localStorage.setItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
-      }
-
-      // ユーザー情報を取得
-      const userResponse = await fetchApi(AUTH_ENDPOINTS.ME, {
-        requiresAuth: true,
-      }).catch(error => {
-        throw new AuthError('ネットワークエラーが発生しました', AuthErrorCode.NETWORK_ERROR, error);
-      });
-
-      if (!userResponse.ok) {
-        const errorData = await userResponse.json().catch(() => ({}));
-        const status = userResponse.status;
-
-        if (status === 401) {
-          throw new AuthError(
-            'セッションの有効期限が切れました',
-            AuthErrorCode.TOKEN_EXPIRED,
-            errorData
-          );
-        } else if (status === 404) {
-          throw new AuthError('ユーザーが見つかりません', AuthErrorCode.USER_NOT_FOUND, errorData);
-        } else if (status >= 500) {
-          throw new AuthError(
-            'サーバーエラーが発生しました',
-            AuthErrorCode.SERVER_ERROR,
-            errorData
-          );
-        } else {
-          throw new AuthError(
-            errorData.detail || 'ユーザー情報の取得に失敗しました',
-            AuthErrorCode.UNKNOWN,
-            errorData
-          );
-        }
-      }
-
-      const userData = await userResponse.json().catch(error => {
-        throw new AuthError('レスポンスの解析に失敗しました', AuthErrorCode.SERVER_ERROR, error);
-      });
+      // デモユーザー情報を設定
       const loggedInUser: User = {
-        id: userData.id.toString(),
-        name: userData.full_name,
-        role: userData.role as UserRole,
-        email: userData.email,
-        avatar: userData.avatar_url,
+        id: demoUser.id,
+        name: demoUser.name,
+        role: demoUser.role,
+        email: demoUser.email,
       };
 
       setUser(loggedInUser);
@@ -217,53 +159,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, role: UserRole, name: string) => {
     try {
-      // APIリクエストを実装
-      const response = await fetchApi(AUTH_ENDPOINTS.REGISTER, {
-        method: 'POST',
-        body: JSON.stringify({ email, password, role, name }),
-      }).catch(error => {
-        throw new AuthError('ネットワークエラーが発生しました', AuthErrorCode.NETWORK_ERROR, error);
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const status = response.status;
-
-        if (status === 409) {
-          throw new AuthError(
-            'このメールアドレスは既に登録されています',
-            AuthErrorCode.VALIDATION_ERROR,
-            errorData
-          );
-        } else if (status === 422) {
-          throw new AuthError(
-            '入力内容に誤りがあります',
-            AuthErrorCode.VALIDATION_ERROR,
-            errorData
-          );
-        } else if (status >= 500) {
-          throw new AuthError(
-            'サーバーエラーが発生しました',
-            AuthErrorCode.SERVER_ERROR,
-            errorData
-          );
-        } else {
-          throw new AuthError(
-            errorData.detail || '登録に失敗しました',
-            AuthErrorCode.UNKNOWN,
-            errorData
-          );
-        }
+      // デモ用の新規登録機能
+      // 簡単なバリデーション
+      if (!email || !password || !name) {
+        throw new AuthError('すべての項目を入力してください', AuthErrorCode.VALIDATION_ERROR);
       }
 
-      const data = await response.json().catch(error => {
-        throw new AuthError('レスポンスの解析に失敗しました', AuthErrorCode.SERVER_ERROR, error);
-      });
+      if (password.length < 6) {
+        throw new AuthError(
+          'パスワードは6文字以上で入力してください',
+          AuthErrorCode.VALIDATION_ERROR
+        );
+      }
+
+      // デモ用のユーザーIDを生成
+      const newUserId = `demo_${Date.now()}`;
+
+      // デモ用のトークンを生成
+      const access_token = `demo_token_${Date.now()}`;
+      const token_type = 'bearer';
+
+      // トークンをローカルストレージに保存
+      localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN, access_token);
+      localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN_TYPE, token_type);
+      localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN_TIMESTAMP, Date.now().toString());
+      localStorage.setItem(AUTH_STORAGE_KEYS.REMEMBER_ME, 'true');
+
+      // デモユーザー情報を設定
       const newUser: User = {
-        id: data.id,
-        name: data.name,
-        role: data.role,
-        email: data.email,
+        id: newUserId,
+        name: name,
+        role: role,
+        email: email,
       };
 
       setUser(newUser);

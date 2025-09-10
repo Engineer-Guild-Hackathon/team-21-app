@@ -9,7 +9,7 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-
+import { useAuth } from './contexts/AuthContext';
 const features = [
   {
     name: 'AIキャラクターとの対話',
@@ -70,6 +70,278 @@ const testimonials = [
 ];
 
 export default function Home() {
+  const { user, isAuthenticated } = useAuth();
+
+  // 認証済みユーザーのダッシュボード表示
+  if (isAuthenticated && user) {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        {/* ヘッダー */}
+        <div className="bg-white shadow">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                {user.role === 'student' && '学習ダッシュボード'}
+                {user.role === 'parent' && '保護者ダッシュボード'}
+                {user.role === 'teacher' && '教師ダッシュボード'}
+              </h1>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">こんにちは、{user.name}さん</span>
+                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">{user.name.charAt(0)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          {/* ユーザー種別に応じたダッシュボード内容 */}
+          {user.role === 'student' && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <AcademicCapIcon className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">今日の学習</dt>
+                        <dd className="text-lg font-medium text-gray-900">3つの課題を完了</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/learning"
+                      className="font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      学習を続ける
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <ChartBarIcon className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">今週の進捗</dt>
+                        <dd className="text-lg font-medium text-gray-900">85% 完了</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/progress"
+                      className="font-medium text-green-600 hover:text-green-500"
+                    >
+                      詳細を見る
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <ChatBubbleBottomCenterTextIcon className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">AIチャット</dt>
+                        <dd className="text-lg font-medium text-gray-900">新しいメッセージ</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/chat"
+                      className="font-medium text-purple-600 hover:text-purple-500"
+                    >
+                      チャットを開く
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {user.role === 'parent' && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <ChartBarIcon className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">子どもの進捗</dt>
+                        <dd className="text-lg font-medium text-gray-900">今週は順調に学習中</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/dashboard"
+                      className="font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      詳細を見る
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <HeartIcon className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">感情分析</dt>
+                        <dd className="text-lg font-medium text-gray-900">ポジティブな状態</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link href="/analysis" className="font-medium text-red-600 hover:text-red-500">
+                      分析結果を見る
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <ChatBubbleBottomCenterTextIcon className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">アドバイス</dt>
+                        <dd className="text-lg font-medium text-gray-900">新しい提案があります</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/advice"
+                      className="font-medium text-green-600 hover:text-green-500"
+                    >
+                      アドバイスを見る
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {user.role === 'teacher' && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <UserGroupIcon className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">クラス管理</dt>
+                        <dd className="text-lg font-medium text-gray-900">25名の生徒</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link href="/class" className="font-medium text-blue-600 hover:text-blue-500">
+                      クラスを見る
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <ChartBarIcon className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">生徒分析</dt>
+                        <dd className="text-lg font-medium text-gray-900">全体の進捗を確認</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/analysis"
+                      className="font-medium text-green-600 hover:text-green-500"
+                    >
+                      分析を見る
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <AcademicCapIcon className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">指導記録</dt>
+                        <dd className="text-lg font-medium text-gray-900">新しい記録を追加</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-5 py-3">
+                  <div className="text-sm">
+                    <Link
+                      href="/records"
+                      className="font-medium text-purple-600 hover:text-purple-500"
+                    >
+                      記録を管理
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  // 未認証ユーザー向けのランディングページ
   return (
     <main className="flex min-h-screen flex-col bg-gray-50">
       {/* ヒーローセクション */}

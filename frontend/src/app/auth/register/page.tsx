@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { AuthError, AuthErrorCode } from '../../../types/error';
 import { useAuth, UserRole } from '../../contexts/AuthContext';
 
 export default function RegisterPage() {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,19 +20,22 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (password !== confirmPassword) {
-      setError('パスワードが一致しません');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
+      // パスワード確認
+      if (password !== confirmPassword) {
+        throw new AuthError('パスワードが一致しません', AuthErrorCode.VALIDATION_ERROR);
+      }
+
       await register(email, password, role, name);
       router.push('/');
-    } catch (err) {
-      setError('登録に失敗しました。入力内容を確認してください。');
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('登録に失敗しました。入力内容を確認してください。');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -41,10 +45,10 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
-          新規アカウント登録
+          アカウント作成
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          すでにアカウントをお持ちの方は{' '}
+          アカウントをお持ちの方は{' '}
           <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
             ログイン
           </Link>{' '}
@@ -98,6 +102,25 @@ export default function RegisterPage() {
             </div>
 
             <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                アカウント種別
+              </label>
+              <div className="mt-1">
+                <select
+                  id="role"
+                  name="role"
+                  value={role}
+                  onChange={e => setRole(e.target.value as UserRole)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                >
+                  <option value="student">生徒</option>
+                  <option value="parent">保護者</option>
+                  <option value="teacher">教師</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 パスワード
               </label>
@@ -116,13 +139,13 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 パスワード（確認）
               </label>
               <div className="mt-1">
                 <input
-                  id="confirm-password"
-                  name="confirm-password"
+                  id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
                   autoComplete="new-password"
                   required
@@ -134,25 +157,6 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                ユーザー種別
-              </label>
-              <div className="mt-1">
-                <select
-                  id="role"
-                  name="role"
-                  value={role}
-                  onChange={e => setRole(e.target.value as UserRole)}
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                >
-                  <option value="student">生徒</option>
-                  <option value="parent">保護者</option>
-                  <option value="teacher">教師</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
               <button
                 type="submit"
                 disabled={isLoading}
@@ -160,7 +164,7 @@ export default function RegisterPage() {
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                {isLoading ? '登録中...' : '登録する'}
+                {isLoading ? '登録中...' : 'アカウント作成'}
               </button>
             </div>
           </form>

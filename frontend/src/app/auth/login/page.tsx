@@ -47,6 +47,7 @@ export default function LoginPage() {
     try {
       const rememberMe = document.getElementById('remember-me') as HTMLInputElement;
       await login(email, password, rememberMe.checked);
+      // ログイン成功後はホームページ（ダッシュボード）にリダイレクト
       router.push('/');
     } catch (err: unknown) {
       if (err instanceof AuthError) {
@@ -65,6 +66,7 @@ export default function LoginPage() {
 
     try {
       await login(account.email, account.password, true);
+      // デモログイン成功後もホームページ（ダッシュボード）にリダイレクト
       router.push('/');
     } catch (err: unknown) {
       if (err instanceof AuthError) {
