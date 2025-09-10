@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg/backend:5bfe4ce
+          image: asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg/backend:b5727d5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
@@ -25,13 +25,13 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: JWT_SECRET
-            - name: DATABASE_URL
-              value: postgresql+asyncpg://postgres:$(DB_PASS)@127.0.0.1:5432/noncog
             - name: DB_PASS
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
                   key: DB_PASS
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://postgres:$(DB_PASS)@127.0.0.1:5432/noncog
             - name: ALLOWED_ORIGINS
               valueFrom:
                 configMapKeyRef:

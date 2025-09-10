@@ -1,11 +1,15 @@
+import os
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# データベース設定
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/noncog"
+# データベース設定 - 環境変数から動的に読み取り
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql+asyncpg://postgres:postgres@db:5432/noncog"
+)
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(
