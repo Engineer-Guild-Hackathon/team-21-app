@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.security import get_password_hash
 from src.domain.models.user import User
 from src.infrastructure.database import SessionLocal
