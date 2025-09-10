@@ -1,4 +1,4 @@
-# データパイプライン用Dockerfile
+# MLサービス用Dockerfile
 FROM python:3.11-slim
 
 # 作業ディレクトリを設定
@@ -17,6 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # アプリケーションコードをコピー
 COPY . .
+
+# ポートを公開
+EXPOSE 8001
 
 # アプリケーションを起動
 CMD ["python", "main.py"]

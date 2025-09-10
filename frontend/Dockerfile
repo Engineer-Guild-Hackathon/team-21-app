@@ -1,63 +1,34 @@
-# 開発環境
-FROM node:18-alpine AS development
-
-WORKDIR /app
+# フロントエンド用Dockerfile
+FROM node:18-alpine AS base
 
 # 依存関係のインストール
-COPY package*.json ./
-RUN npm install
-
-# ソースコードのコピー
-COPY . .
-
-# 開発サーバーの起動
-CMD ["npm", "run", "dev"]
-
-# ビルド環境
-FROM node:18-alpine AS builder
-
+FROM base AS deps
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
 
-# 依存関係のインストール（開発依存関係を含む）
+# 開発環境用ビルド
+FROM base AS development
+WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+COPY . .
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
 
-# 設定ファイルのコピー
-COPY next.config.js ./
-COPY tsconfig.json ./
-COPY postcss.config.js ./
-COPY tailwind.config.ts ./
-
-# publicディレクトリの作成と静的ファイルのコピー
-RUN mkdir -p public
-COPY public ./public
-
-# srcディレクトリのコピー
-COPY src ./src
-
-# アプリケーションのビルド
-ENV NEXT_TELEMETRY_DISABLED 1
+# 本番環境用ビルド
+FROM base AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
 RUN npm run build
 
-# 本番環境
-FROM node:18-alpine AS production
-
+FROM base AS production
 WORKDIR /app
-
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-
-# package.jsonとpackage-lock.jsonをコピー
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
 COPY package*.json ./
-
-# 本番環境の依存関係をインストール
-RUN npm ci --omit=dev
-
-# 設定ファイルをコピー
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-# 本番サーバーの起動
-CMD ["node", "server.js"]
+EXPOSE 3000
+CMD ["npm", "start"]

@@ -1,49 +1,25 @@
-# 開発環境
-FROM python:3.11-slim AS development
+# バックエンド用Dockerfile
+FROM python:3.11-slim
 
+# 作業ディレクトリを設定
 WORKDIR /app
 
-# システムの依存関係
+# システムの依存関係をインストール
 RUN apt-get update && apt-get install -y \
-    build-essential \
+    gcc \
+    g++ \
     curl \
-    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Pythonパッケージのインストール
+# Pythonの依存関係をコピーしてインストール
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ソースコードのコピー
+# アプリケーションコードをコピー
 COPY . .
 
-# PYTHONPATHの設定
-ENV PYTHONPATH=/app
+# ポートを公開
+EXPOSE 8000
 
-# 開発サーバーの起動
+# アプリケーションを起動
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-# 本番環境
-FROM python:3.11-slim AS production
-
-WORKDIR /app
-
-# システムの依存関係
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Pythonパッケージのインストール
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# ソースコードのコピー
-COPY . .
-
-# PYTHONPATHの設定
-ENV PYTHONPATH=/app
-
-# 本番サーバーの起動
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
