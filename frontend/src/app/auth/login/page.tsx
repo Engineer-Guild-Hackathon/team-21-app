@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { AuthError } from '../../../types/error';
 import { useAuth, UserRole } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
@@ -17,22 +18,22 @@ export default function LoginPage() {
   const demoAccounts = [
     {
       role: 'student' as UserRole,
-      email: 'student@example.com',
-      password: 'password123',
+      email: 'taro@example.com',
+      password: 'demo1234',
       name: '山田太郎',
       description: '小学5年生',
     },
     {
       role: 'parent' as UserRole,
-      email: 'parent@example.com',
-      password: 'password123',
+      email: 'hanako@example.com',
+      password: 'demo1234',
       name: '山田花子',
       description: '太郎の母',
     },
     {
       role: 'teacher' as UserRole,
-      email: 'teacher@example.com',
-      password: 'password123',
+      email: 'sato@example.com',
+      password: 'demo1234',
       name: '佐藤先生',
       description: '5年1組担任',
     },
@@ -44,10 +45,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const rememberMe = document.getElementById('remember-me') as HTMLInputElement;
+      await login(email, password, rememberMe.checked);
       router.push('/');
-    } catch (err) {
-      setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -58,10 +64,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(account.email, account.password);
+      await login(account.email, account.password, true);
       router.push('/');
-    } catch (err) {
-      setError('デモアカウントでのログインに失敗しました。');
+    } catch (err: unknown) {
+      if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('デモアカウントでのログインに失敗しました。');
+      }
     } finally {
       setIsLoading(false);
     }

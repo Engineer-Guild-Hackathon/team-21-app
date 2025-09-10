@@ -82,7 +82,7 @@ export default function LoginPage() {
         <div className="mt-8">
           <div className="text-xl font-semibold text-gray-900 mb-4">デモアカウント</div>
           <div className="space-y-4">
-            {demoAccounts.map((account) => (
+            {demoAccounts.map(account => (
               <button
                 key={account.email}
                 onClick={() => handleDemoLogin(account)}
@@ -128,7 +128,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 placeholder="メールアドレス"
               />
@@ -144,7 +144,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 placeholder="パスワード"
               />

@@ -12,21 +12,25 @@ app = FastAPI(
 # CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 本番環境では適切なオリジンを指定
+    allow_origins=[
+        "http://localhost:3000",  # フロントエンドのURLを明示的に指定
+        "http://localhost:8000",  # 開発環境のバックエンドURL
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "X-CSRF-Token"],
+    expose_headers=["Content-Type", "Authorization"],
 )
 
 # ルーターの登録
-app.include_router(auth.router, prefix="/api/auth", tags=["認証"])
-app.include_router(users.router, prefix="/api/users", tags=["ユーザー"])
+app.include_router(auth.router, prefix="/api/v1", tags=["認証"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["ユーザー"])
 app.include_router(
-    emotion_analysis.router, prefix="/api/emotion-analysis", tags=["感情分析"]
+    emotion_analysis.router, prefix="/api/v1/emotion-analysis", tags=["感情分析"]
 )
-app.include_router(emotions.router, prefix="/api/emotions", tags=["感情"])
-app.include_router(feedback.router, prefix="/api/feedback", tags=["フィードバック"])
-app.include_router(learning.router, prefix="/api/learning", tags=["学習"])
+app.include_router(emotions.router, prefix="/api/v1/emotions", tags=["感情"])
+app.include_router(feedback.router, prefix="/api/v1/feedback", tags=["フィードバック"])
+app.include_router(learning.router, prefix="/api/v1/learning", tags=["学習"])
 
 
 @app.get("/")
