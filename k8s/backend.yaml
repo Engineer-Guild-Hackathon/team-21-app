@@ -99,6 +99,9 @@ kind: Service
 metadata:
   name: backend
   namespace: noncog
+  # Link BackendConfig for SSE long-lived connections (GKE Ingress)
+  annotations:
+    cloud.google.com/backend-config: '{"default": "backend-bec"}'
 spec:
   type: ClusterIP
   selector:
@@ -108,9 +111,6 @@ spec:
       targetPort: 8000
       protocol: TCP
       name: http
-  # Link BackendConfig for SSE long-lived connections (GKE Ingress)
-  annotations:
-    cloud.google.com/backend-config: '{"default": "backend-bec"}'
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
