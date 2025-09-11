@@ -1,19 +1,64 @@
+import asyncio
+import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1 import auth, emotion_analysis, emotions, feedback, learning, users
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """アプリケーションのライフサイクル管理"""
+    # 起動時
+    logging.info("app_startup_begin")
+
+    # Kafkaコンシューマを開始
+    try:
+        from src.api.v1.learning import get_kafka_consumer
+
+        consumer = get_kafka_consumer()
+        if consumer.enabled:
+            # バックグラウンドタスクでコンシューマを開始
+            asyncio.create_task(consumer.start_consuming())
+            logging.info("kafka_consumer_startup_task_created")
+        else:
+            logging.info("kafka_consumer_disabled_at_startup")
+    except Exception as e:
+        logging.exception("kafka_consumer_startup_error: %s", e)
+
+    logging.info("app_startup_complete")
+
+    yield
+
+    # 終了時
+    logging.info("app_shutdown_begin")
+
+    # Kafkaコンシューマを停止
+    try:
+        from src.api.v1.learning import get_kafka_consumer
+
+        consumer = get_kafka_consumer()
+        consumer.stop_consuming()
+        logging.info("kafka_consumer_shutdown_complete")
+    except Exception as e:
+        logging.exception("kafka_consumer_shutdown_error: %s", e)
+
+    logging.info("app_shutdown_complete")
+
+
 app = FastAPI(
     title="非認知能力学習プラットフォーム API",
     description="AIを活用した非認知能力の学習・トレーニングプラットフォームのAPI",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 
 # CORS設定 - 環境変数から動的に読み取り
-def get_allowed_origins():
+def get_allowed_origins() -> list[str]:
     """環境変数から許可されたオリジンを取得"""
     # デフォルトのオリジン（開発環境用）
     default_origins = [
