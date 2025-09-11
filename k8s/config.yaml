@@ -6,3 +6,8 @@ metadata:
 data:
   NEXT_PUBLIC_API_BASE: "https://api.34.107.156.246.nip.io"
   ALLOWED_ORIGINS: "https://app.34.107.156.246.nip.io"
+  # Kafka settings for production
+  ENABLE_KAFKA_PRODUCE: "true"
+  ENABLE_KAFKA_CONSUME: "true"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.kafka.svc.cluster.local:9092"
+  KAFKA_LEARN_EVENT_TOPIC: "learn_action_events"
