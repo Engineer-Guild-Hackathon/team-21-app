@@ -13,7 +13,7 @@ export default function NonCogPage() {
   const userId = '1';
 
   // SSEでリアルタイム更新を受信
-  const { isConnected, lastMessage } = useSSE({
+  const { isConnected } = useSSE({
     userId,
     onMessage: message => {
       if (message.type === 'summary_update') {
