@@ -163,6 +163,25 @@ cp frontend/env.local.example frontend/.env.local
 docker-compose up -d
 ```
 
+### 🔴→🟢 リアルタイム更新（Kafka + SSE）
+
+本プロダクトは、生徒の学習イベントを Kafka に発行し、Backend のコンシューマで取り込み → インメモリ集計 →SSE でフロントに配信することで、画面が自動更新されます。
+
+- 主要エンドポイント
+  - POST `/api/learning/events/learn-action` 学習イベント送信
+  - GET `/api/learning/stream/{user_id}` SSE ストリーム（クライアント購読）
+- 必須環境変数（docker-compose に定義済み）
+  - `ENABLE_KAFKA_PRODUCE=true`
+  - `ENABLE_KAFKA_CONSUME=true`
+  - `KAFKA_BOOTSTRAP_SERVERS=kafka:9092`
+  - `KAFKA_LEARN_EVENT_TOPIC=learn_action_events`
+  - Frontend: `NEXT_PUBLIC_API_BASE=http://localhost:8000`
+- 動作確認
+  1. `docker compose up -d frontend backend kafka zookeeper`
+  2. ブラウザで `http://localhost:3000/noncog` を開く（バッジが「🟢 Real-time Connected」になれば OK）
+  3. 画面の「Send Retry Event」を押すと、数値（Retry/Avg Think/Grit/SRL）が手動リロードなしで更新
+  4. SSE 単体: `curl -s http://localhost:8000/api/learning/stream/1`
+
 ### **開発コマンド**
 
 ```bash
@@ -330,7 +349,6 @@ make db-migrate
 - [ ] 多言語サポート
 
 ---
-
 
 <div align="center">
 

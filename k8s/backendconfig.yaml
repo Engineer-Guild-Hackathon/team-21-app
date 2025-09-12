@@ -1,0 +1,14 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: backend-bec
+  namespace: noncog
+spec:
+  timeoutSec: 3600
+  connectionDraining:
+    drainingTimeoutSec: 0
+  logging:
+    enable: true
+  healthCheck:
+    requestPath: /docs
+    port: 8000

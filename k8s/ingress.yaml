@@ -8,6 +8,8 @@ metadata:
     networking.gke.io/managed-certificates: noncog-cert
     kubernetes.io/ingress.global-static-ip-name: noncog-ip
     kubernetes.io/ingress.allow-http: "false"
+    # Increase timeouts for SSE / long-lived connections
+    cloud.google.com/app-protocols: '{"backend":"HTTP"}'
 spec:
   rules:
     - host: app.34.107.156.246.nip.io

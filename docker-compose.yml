@@ -27,9 +27,13 @@ services:
     environment:
       - PYTHONPATH=/app/src
       - ENVIRONMENT=development
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/noncog
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/noncog
       - REDIS_URL=redis://redis:6379/0
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PERSIST_LEARN_EVENTS=false
+      - ENABLE_KAFKA_PRODUCE=true
+      - ENABLE_KAFKA_CONSUME=true
+      - KAFKA_LEARN_EVENT_TOPIC=learn_action_events
     depends_on:
       db:
         condition: service_healthy
@@ -40,7 +44,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 10s
-      timeout: 5s
+      timeout: 5s 
       retries: 5
 
   # MLサービス

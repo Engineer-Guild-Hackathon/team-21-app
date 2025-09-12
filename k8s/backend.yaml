@@ -20,6 +20,26 @@ spec:
           ports:
             - containerPort: 8000
           env:
+            - name: ENABLE_KAFKA_PRODUCE
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ENABLE_KAFKA_PRODUCE
+            - name: ENABLE_KAFKA_CONSUME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ENABLE_KAFKA_CONSUME
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_LEARN_EVENT_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_LEARN_EVENT_TOPIC
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -79,6 +99,9 @@ kind: Service
 metadata:
   name: backend
   namespace: noncog
+  # Link BackendConfig for SSE long-lived connections (GKE Ingress)
+  annotations:
+    cloud.google.com/backend-config: '{"default": "backend-bec"}'
 spec:
   type: ClusterIP
   selector:

@@ -1,0 +1,67 @@
+# Cursor IDE Notification Rules 🔔
+
+## Notification Categories
+
+### System Notifications
+
+- Critical updates
+- Security alerts
+- Performance warnings
+
+### Development Notifications
+
+- Build status
+- Test results
+- Linting warnings
+
+### Collaboration Notifications
+
+- Pull requests
+- Code reviews
+- Comments
+
+## Notification Settings
+
+### Priority Levels
+
+- HIGH: Immediate notification
+- MEDIUM: Batched notifications
+- LOW: Daily digest
+
+### Notification Channels
+
+- Desktop notifications
+- In-app notifications
+- Email notifications
+
+### Custom Rules
+
+- Project-specific rules
+- Team-specific rules
+- Time-based rules
+
+## Configuration
+
+### Desktop Notifications
+
+### Email Notifications
+
+## Best Practices
+
+### Notification Management
+
+1. Configure priority levels appropriately
+2. Use notification categories effectively
+3. Set up custom rules for specific needs
+
+### Reducing Noise
+
+1. Filter non-essential notifications
+2. Group similar notifications
+3. Set quiet hours
+
+### Team Communication
+
+1. Standardize notification settings
+2. Document notification protocols
+3. Regular review of notification effectiveness
