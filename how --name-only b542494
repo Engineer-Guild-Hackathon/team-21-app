@@ -1,0 +1,10 @@
+[33mb542494[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/ml-feedback-progress-system[m[33m)[m feat: implement ML-based feedback and progress system
+[33m7ca9bb4[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge pull request #31 from Engineer-Guild-Hackathon/develop
+[33m5adb0c1[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m Merge pull request #30 from Engineer-Guild-Hackathon/feature/implement-learning-quests
+[33m39807d7[m[33m ([m[1;31morigin/feature/implement-learning-quests[m[33m, [m[1;32mfeature/implement-learning-quests[m[33m)[m fix : fix format
+[33m1d52fd6[m add : AI chat
+[33mee980dc[m feat: integrate Gemini AI for chat functionality
+[33m6691f9d[m fix: restore AIチャット navigation change
+[33mebf9f1b[m feat: separate learning and quest functionality
+[33m9291348[m fix: resolve SQLAlchemy relationship mapping errors
+[33m7029081[m fix: extend JWT token expiration and clean up debug logs

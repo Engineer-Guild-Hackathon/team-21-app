@@ -18,6 +18,9 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+  const [isAutoAnalyzing, setIsAutoAnalyzing] = useState(false);
+  const [lastAnalysisTime, setLastAnalysisTime] = useState<Date | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,19 +29,71 @@ export default function AIChatPage() {
       return;
     }
 
-    // 初期メッセージを追加
-    if (messages.length === 0) {
-      setMessages([
-        {
-          id: '1',
-          content:
-            'こんにちは！AIアシスタントです。学習について何でもお聞きください。宿題の手伝い、勉強のコツ、質問など、お気軽にどうぞ！',
-          role: 'assistant',
-          timestamp: new Date(),
+    // チャットセッションを初期化または既存のセッションを読み込み
+    initializeChatSession();
+  }, [isAuthenticated, router]);
+
+  // 自動分析のuseEffect
+  useEffect(() => {
+    if (!isAuthenticated || !currentSessionId) return;
+
+    // 会話量に応じて分析頻度を調整
+    const getAnalysisInterval = () => {
+      const userMessages = messages.filter(msg => msg.role === 'user');
+      if (userMessages.length >= 10) {
+        return 20000; // 会話が多い場合: 20秒間隔
+      } else if (userMessages.length >= 5) {
+        return 30000; // 中程度の場合: 30秒間隔
+      } else if (userMessages.length >= 3) {
+        return 45000; // 少ない場合: 45秒間隔
+      }
+      return null; // 3回未満の場合は分析しない
+    };
+
+    const interval = getAnalysisInterval();
+    if (!interval) return;
+
+    const autoAnalysisInterval = setInterval(() => {
+      performAutoAnalysis();
+    }, interval);
+
+    return () => clearInterval(autoAnalysisInterval);
+  }, [isAuthenticated, currentSessionId, messages.length]);
+
+  const initializeChatSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // 新しいチャットセッションを作成
+      const response = await fetch('http://localhost:8000/api/chat/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      ]);
+        body: JSON.stringify({ title: 'AIチャット' }),
+      });
+
+      if (response.ok) {
+        const session = await response.json();
+        setCurrentSessionId(session.id);
+
+        // 初期メッセージを追加
+        setMessages([
+          {
+            id: '1',
+            content:
+              'こんにちは！AIアシスタントです。学習について何でもお聞きください。宿題の手伝い、勉強のコツ、質問など、お気軽にどうぞ！',
+            role: 'assistant',
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('チャットセッション初期化エラー:', error);
     }
-  }, [isAuthenticated, router, messages.length]);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -63,6 +118,9 @@ export default function AIChatPage() {
     setIsLoading(true);
 
     try {
+      // ユーザーメッセージをデータベースに保存
+      await saveMessageToDatabase(userMessage.content, 'user');
+
       // Gemini APIを使用してAI応答を取得
       const response = await geminiChatService.sendMessage(inputMessage);
 
@@ -74,6 +132,14 @@ export default function AIChatPage() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // AI応答をデータベースに保存
+      await saveMessageToDatabase(assistantMessage.content, 'assistant');
+
+      // ML分析を実行（会話が1回以上になったら）
+      if (messages.length >= 1) {
+        await analyzeConversationWithML([...messages, userMessage, assistantMessage]);
+      }
     } catch (error) {
       console.error('AIチャットエラー:', error);
       const errorMessage: Message = {
@@ -85,6 +151,108 @@ export default function AIChatPage() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveMessageToDatabase = async (content: string, role: 'user' | 'assistant') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !currentSessionId) return;
+
+      const response = await fetch(
+        `http://localhost:8000/api/chat/sessions/${currentSessionId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            content: content,
+            role: role,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('メッセージ保存エラー:', response.status);
+      }
+    } catch (error) {
+      console.error('メッセージ保存エラー:', error);
+    }
+  };
+
+  const analyzeConversationWithML = async (conversationMessages: Message[]) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // 会話履歴をML分析APIに送信（バックエンドAPIの形式に合わせる）
+      const messagesData = conversationMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        role: msg.role,
+        timestamp: msg.timestamp.toISOString(),
+      }));
+
+      const response = await fetch('http://localhost:8000/api/ml/analyze-conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(messagesData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('ML分析結果:', result);
+
+        // 成功通知（オプション）
+        // toast.success('会話が分析されました！フィードバックページで詳細を確認できます。');
+      }
+    } catch (error) {
+      console.error('ML分析エラー:', error);
+    }
+  };
+
+  const performAutoAnalysis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // 既に分析中の場合はスキップ
+      if (isAutoAnalyzing) return;
+
+      setIsAutoAnalyzing(true);
+      console.log('自動ML分析を実行中...');
+
+      const response = await fetch('http://localhost:8000/api/ml/analyze-from-database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('自動ML分析完了:', result);
+        setLastAnalysisTime(new Date());
+
+        // 静かに成功（アラートは表示しない）
+        console.log(`自動分析完了 - 会話数: ${result.conversation_count || 0}`);
+        if (result.quest_data) {
+          console.log(`クエスト完了数: ${result.quest_data.total_completed || 0}`);
+          console.log(`連続達成日数: ${result.quest_data.max_streak_days || 0}`);
+        }
+      } else {
+        console.error('自動ML分析エラー:', response.status);
+      }
+    } catch (error) {
+      console.error('自動ML分析エラー:', error);
+    } finally {
+      setIsAutoAnalyzing(false);
     }
   };
 
@@ -102,21 +270,55 @@ export default function AIChatPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center">
-            <ChatBubbleLeftRightIcon className="h-8 w-8 text-indigo-600 mr-3" />
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900">AIチャット</h1>
-              <p className="mt-2 text-gray-600">AIアシスタントと学習についてお話ししましょう</p>
+      <div className="bg-white shadow-sm">
+        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <ChatBubbleLeftRightIcon className="h-6 w-6 text-indigo-600 mr-2" />
+              <h1 className="text-xl font-bold text-gray-900">AIチャット</h1>
             </div>
+            <p className="text-sm text-blue-600">💡 自動学習分析で成長をサポート</p>
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         {/* チャットエリア */}
-        <div className="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
+        <div className="bg-white rounded-lg shadow-lg h-[700px] flex flex-col">
+          {/* ヘッダー */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center space-x-3">
+              <h2 className="text-lg font-semibold text-gray-800">AI学習アシスタント</h2>
+              {/* 自動分析インジケーター */}
+              <div className="flex items-center space-x-2">
+                {isAutoAnalyzing && (
+                  <div className="flex items-center space-x-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>AIが学習を分析中...</span>
+                  </div>
+                )}
+                {lastAnalysisTime && !isAutoAnalyzing && (
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    ✓ 学習分析完了
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => router.push('/progress')}
+                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              >
+                進捗
+              </button>
+              <button
+                onClick={() => router.push('/feedback')}
+                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+              >
+                フィードバック
+              </button>
+            </div>
+          </div>
           {/* メッセージ表示エリア */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map(message => (
@@ -210,13 +412,6 @@ export default function AIChatPage() {
                 <li>• グリット（やり抜く力）の育成</li>
               </ul>
             </div>
-          </div>
-          <div className="mt-4 p-3 bg-blue-100 rounded-lg">
-            <p className="text-xs text-blue-700">
-              💡 <strong>設定方法:</strong> Gemini API
-              キーを設定すると、より高度なAI機能が利用できます。 環境変数{' '}
-              <code>NEXT_PUBLIC_GEMINI_API_KEY</code> にAPIキーを設定してください。
-            </p>
           </div>
         </div>
       </div>

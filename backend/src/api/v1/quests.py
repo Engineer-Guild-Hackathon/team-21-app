@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ...core.security import get_current_user
+from ...domain.models.avatar import UserStats
 from ...domain.models.quest import (
     Quest,
     QuestProgress,
@@ -41,6 +42,32 @@ from ...infrastructure.database import get_db
 router = APIRouter()
 
 
+async def update_user_stats_on_quest_completion(user_id: int, quest, db: AsyncSession):
+    """クエスト完了時にユーザー統計を更新"""
+    # ユーザー統計を取得または作成
+    stats_stmt = select(UserStats).where(UserStats.user_id == user_id)
+    stats_result = await db.execute(stats_stmt)
+    stats = stats_result.scalar_one_or_none()
+
+    if not stats:
+        stats = UserStats(user_id=user_id)
+        db.add(stats)
+
+    # 完了クエスト数を増加
+    stats.total_quests_completed += 1
+
+    # 日次クエストの場合
+    if quest.is_daily:
+        stats.daily_quests_completed += 1
+        # 連続日数を更新（簡易実装）
+        stats.current_streak_days += 1
+        stats.max_streak_days = max(stats.max_streak_days, stats.current_streak_days)
+
+    # 学習時間を増加（推定）
+    stats.total_learning_time_minutes += quest.estimated_duration
+    stats.total_sessions += 1
+
+
 @router.get("/", response_model=QuestListResponse)
 async def get_quests(
     page: int = Query(1, ge=1, description="ページ番号"),
@@ -56,7 +83,7 @@ async def get_quests(
     """利用可能なクエスト一覧を取得"""
 
     # クエリ構築
-    stmt = select(Quest).where(Quest.is_active == True)
+    stmt = select(Quest).where(Quest.is_active)
 
     # フィルタ適用
     if quest_type:
@@ -124,7 +151,7 @@ async def get_recommended_quests(
     recommended_stmt = (
         select(Quest)
         .where(
-            Quest.is_active == True,
+            Quest.is_active,
             Quest.quest_type.in_(recommended_types),
             Quest.required_level <= 1,  # 仮のレベル制限
         )
@@ -254,6 +281,9 @@ async def update_quest_progress(
                 )
                 db.add(badge_reward)
 
+            # 統計情報を更新
+            await update_user_stats_on_quest_completion(current_user.id, quest, db)
+
     await db.commit()
     await db.refresh(progress)
 
@@ -308,9 +338,7 @@ async def get_quest_stats(
     """クエスト統計情報を取得"""
 
     # 基本的な統計
-    total_quests = await db.scalar(
-        select(func.count(Quest.id)).where(Quest.is_active == True)
-    )
+    total_quests = await db.scalar(select(func.count(Quest.id)).where(Quest.is_active))
 
     completed_count = await db.scalar(
         select(func.count(QuestProgress.id)).where(
@@ -337,7 +365,7 @@ async def get_quest_stats(
                 and_(
                     QuestReward.user_id == current_user.id,
                     QuestReward.reward_type == "experience",
-                    QuestReward.is_claimed == True,
+                    QuestReward.is_claimed,
                 )
             )
         )
@@ -350,7 +378,7 @@ async def get_quest_stats(
                 and_(
                     QuestReward.user_id == current_user.id,
                     QuestReward.reward_type == "coins",
-                    QuestReward.is_claimed == True,
+                    QuestReward.is_claimed,
                 )
             )
         )
