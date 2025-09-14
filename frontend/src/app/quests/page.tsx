@@ -203,8 +203,10 @@ export default function QuestsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* ヘッダー */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">学習クエスト</h1>
-        <p className="text-gray-600">非認知能力を高める楽しいクエストに挑戦しよう！</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">課題問題クエスト</h1>
+        <p className="text-gray-600">
+          様々な課題問題にチャレンジして、スキルアップを目指しましょう！
+        </p>
       </div>
 
       {/* タブ */}
