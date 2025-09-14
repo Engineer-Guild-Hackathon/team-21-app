@@ -115,12 +115,12 @@ export default function AvatarsPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
       } else {
-        console.error('プロフィール取得エラー:', response.statusText);
+        console.error('プロフィール取得エラー:', response.status, await response.text());
       }
     } catch (error) {
       console.error('プロフィール取得エラー:', error);

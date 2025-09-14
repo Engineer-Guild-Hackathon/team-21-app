@@ -12,6 +12,7 @@ project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from sqlalchemy import text
+
 from src.infrastructure.database import get_db
 
 
@@ -56,8 +57,10 @@ async def give_default_avatar():
 
                 # デフォルトアバターを付与
                 await db.execute(
-                    text("""INSERT INTO user_avatars (user_id, avatar_id, is_current, unlocked_at)
-                           VALUES (:user_id, :avatar_id, true, NOW())"""),
+                    text(
+                        """INSERT INTO user_avatars (user_id, avatar_id, is_current, unlocked_at)
+                           VALUES (:user_id, :avatar_id, true, NOW())"""
+                    ),
                     {"user_id": user_id, "avatar_id": avatar_id},
                 )
 
@@ -70,8 +73,10 @@ async def give_default_avatar():
 
                 if not stats:
                     await db.execute(
-                        text("""INSERT INTO user_stats (user_id, total_avatars_unlocked, created_at, updated_at)
-                               VALUES (:user_id, 1, NOW(), NOW())"""),
+                        text(
+                            """INSERT INTO user_stats (user_id, total_avatars_unlocked, created_at, updated_at)
+                               VALUES (:user_id, 1, NOW(), NOW())"""
+                        ),
                         {"user_id": user_id},
                     )
                 else:
