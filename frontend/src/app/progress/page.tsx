@@ -29,7 +29,7 @@ export default function ProgressPage() {
   const fetchUserStats = async () => {
     try {
       console.log('🔍 ユーザー統計取得開始');
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         console.error('❌ 認証トークンが見つかりません');

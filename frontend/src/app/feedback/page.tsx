@@ -87,7 +87,19 @@ export default function FeedbackPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-24">
-      <h1 className="text-4xl font-bold mb-8">学習フィードバック</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <h1 className="text-4xl font-bold">学習フィードバック</h1>
+        <button
+          onClick={() => {
+            setIsLoading(true);
+            fetchMLFeedback();
+          }}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          disabled={isLoading}
+        >
+          {isLoading ? '更新中...' : '🔄 更新'}
+        </button>
+      </div>
 
       <div className="w-full max-w-7xl">
         {/* 最新のフィードバック */}
