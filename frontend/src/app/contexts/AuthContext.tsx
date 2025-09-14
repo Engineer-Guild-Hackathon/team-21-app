@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<User> => {
     try {
       // APIリクエストを実装
-      const apiBase = 'https://api.34.107.156.246.nip.io';
+      const apiBase = 'http://localhost:8000';
       const response = await fetch(`${apiBase}/api/auth/token`, {
         method: 'POST',
         headers: {
@@ -98,12 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, password: string, role: UserRole, name: string) => {
     try {
       // APIリクエストを実装
-      const response = await fetch('/api/auth/register', {
+      const apiBase = 'http://localhost:8000';
+      const response = await fetch(`${apiBase}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, role, name }),
+        body: JSON.stringify({ email, password, full_name: name, role }),
       });
 
       if (!response.ok) {
@@ -113,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       const newUser: User = {
         id: data.id,
-        name: data.name,
-        role: data.role,
+        name: data.full_name,
+        role: (data.role ?? 'student') as UserRole,
         email: data.email,
       };
 

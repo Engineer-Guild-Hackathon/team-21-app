@@ -49,15 +49,11 @@ function LoginForm() {
       const loggedIn = await login(email, password);
       // redirect クエリがある場合は最優先
       if (redirect) {
-        router.push(redirect);
+        router.replace(redirect);
         return;
       }
-      // ロール別に遷移
-      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
-        router.push('/dashboard');
-      } else {
-        router.push('/learning');
-      }
+      // デフォルトで学習画面に遷移（強制的に遷移）
+      router.replace('/learning');
     } catch (err) {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     } finally {
@@ -73,14 +69,11 @@ function LoginForm() {
       const loggedIn = await login(account.email, account.password);
       // redirect クエリがある場合は最優先
       if (redirect) {
-        router.push(redirect);
+        router.replace(redirect);
         return;
       }
-      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
-        router.push('/dashboard');
-      } else {
-        router.push('/learning');
-      }
+      // デフォルトで学習画面に遷移（強制的に遷移）
+      router.replace('/learning');
     } catch (err) {
       setError('デモアカウントでのログインに失敗しました。');
     } finally {

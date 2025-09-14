@@ -28,11 +28,10 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ログイン済みユーザーが認証ページにアクセスした場合はロールに応じて案内
+  // ログイン済みユーザーが認証ページにアクセスした場合は学習ページへ案内
   if (publicPaths.includes(pathname) && token) {
-    // クライアント側でロール別に分岐するため、一旦ダッシュボードへ
-    // 実際のロール別リダイレクトはAuthContextで処理
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    // デフォルトで学習ページにリダイレクト（ロール別分岐はクライアント側で処理）
+    return NextResponse.redirect(new URL('/learning', request.url));
   }
 
   return NextResponse.next();
