@@ -23,7 +23,7 @@ import { useAuth, UserRole } from '../contexts/AuthContext';
 const navigationByRole: Record<UserRole, Array<{ name: string; href: string; icon: any }>> = {
   student: [
     { name: 'ホーム', href: '/', icon: HomeIcon },
-    { name: '学習', href: '/learning', icon: AcademicCapIcon },
+    { name: 'AIチャット', href: '/learning', icon: ChatBubbleLeftRightIcon },
     { name: 'クエスト', href: '/quests', icon: StarIcon },
     { name: 'アバター', href: '/avatars', icon: SparklesIcon },
     { name: 'フィードバック', href: '/feedback', icon: ChatBubbleLeftRightIcon },
