@@ -77,10 +77,6 @@ class KafkaEventProducer:
             )
             logging.info("kafka_produce_message_sent topic=%s", self.topic)
 
-
-
-
-
             # drive delivery callbacks and ensure immediate delivery for demo
             self._producer.poll(0.5)
             try:
