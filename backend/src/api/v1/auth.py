@@ -1,10 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.security import (
     authenticate_user,
     create_access_token,
@@ -90,6 +89,13 @@ async def register_user(
             detail="このメールアドレスは既に登録されています",
         )
 
+    # 利用規約への同意を確認
+    if not user_data.terms_accepted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="利用規約への同意が必要です",
+        )
+
     # パスワードのハッシュ化
     hashed_password = get_password_hash(user_data.password)
 
@@ -118,6 +124,8 @@ async def register_user(
         full_name=user_data.full_name,
         role=user_data.role,
         class_id=class_id,
+        terms_accepted=user_data.terms_accepted,
+        terms_accepted_at=datetime.utcnow() if user_data.terms_accepted else None,
     )
     db.add(db_user)
     await db.commit()

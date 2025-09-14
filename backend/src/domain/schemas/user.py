@@ -17,6 +17,9 @@ class UserCreate(UserBase):
     """ユーザー作成スキーマ"""
 
     password: str
+    role: str = "student"
+    class_id: Optional[str] = None
+    terms_accepted: bool = False
 
 
 class UserUpdate(UserBase):
