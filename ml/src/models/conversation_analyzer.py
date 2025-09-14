@@ -267,6 +267,93 @@ class ConversationAnalyzer:
 
         return len(topics) / len(topic_keywords)
 
+    def analyze_comprehensive_data(
+        self, messages: List[Dict], quest_data: Dict
+    ) -> NonCognitiveSkills:
+        """会話履歴とクエストデータを統合して包括的に分析"""
+        if not messages and quest_data.get("total_completed", 0) == 0:
+            return NonCognitiveSkills()
+
+        # 基本的な会話分析
+        if messages:
+            basic_skills = self.analyze_conversation_with_context(messages)
+        else:
+            basic_skills = NonCognitiveSkills()
+
+        # クエストデータに基づく補正
+        quest_adjustments = self._calculate_quest_adjustments(quest_data)
+
+        # スキルにクエスト補正を適用
+        comprehensive_skills = NonCognitiveSkills(
+            grit=basic_skills.grit + quest_adjustments.get("grit", 0),
+            collaboration=basic_skills.collaboration
+            + quest_adjustments.get("collaboration", 0),
+            self_regulation=basic_skills.self_regulation
+            + quest_adjustments.get("self_regulation", 0),
+            emotional_intelligence=basic_skills.emotional_intelligence
+            + quest_adjustments.get("emotional_intelligence", 0),
+            confidence=basic_skills.confidence + quest_adjustments.get("confidence", 0),
+        )
+
+        # スコアを0.0-5.0の範囲に制限
+        return NonCognitiveSkills(
+            grit=max(0.0, min(5.0, comprehensive_skills.grit)),
+            collaboration=max(0.0, min(5.0, comprehensive_skills.collaboration)),
+            self_regulation=max(0.0, min(5.0, comprehensive_skills.self_regulation)),
+            emotional_intelligence=max(
+                0.0, min(5.0, comprehensive_skills.emotional_intelligence)
+            ),
+            confidence=max(0.0, min(5.0, comprehensive_skills.confidence)),
+        )
+
+    def _calculate_quest_adjustments(self, quest_data: Dict) -> Dict[str, float]:
+        """クエストデータに基づくスキル補正値を計算"""
+        adjustments = {
+            "grit": 0.0,
+            "collaboration": 0.0,
+            "self_regulation": 0.0,
+            "emotional_intelligence": 0.0,
+            "confidence": 0.0,
+        }
+
+        total_completed = quest_data.get("total_completed", 0)
+        max_streak_days = quest_data.get("max_streak_days", 0)
+        recent_activity = quest_data.get("recent_activity_count", 0)
+
+        # 完了したクエスト数に基づく補正
+        if total_completed >= 10:
+            adjustments["grit"] += 0.5  # 継続性
+            adjustments["confidence"] += 0.3  # 自信
+        elif total_completed >= 5:
+            adjustments["grit"] += 0.3
+            adjustments["confidence"] += 0.2
+        elif total_completed >= 1:
+            adjustments["grit"] += 0.1
+            adjustments["confidence"] += 0.1
+
+        # 連続達成日数に基づく補正
+        if max_streak_days >= 7:
+            adjustments["self_regulation"] += 0.4  # 自己管理
+            adjustments["grit"] += 0.3  # 継続性
+        elif max_streak_days >= 3:
+            adjustments["self_regulation"] += 0.2
+            adjustments["grit"] += 0.2
+
+        # 最近の活動頻度に基づく補正
+        if recent_activity >= 5:
+            adjustments["collaboration"] += 0.2  # 協調性
+            adjustments["emotional_intelligence"] += 0.1  # 感情理解
+        elif recent_activity >= 2:
+            adjustments["collaboration"] += 0.1
+
+        # クエストタイプの多様性に基づく補正
+        quest_types = quest_data.get("recent_quest_types", {})
+        if len(quest_types) >= 3:
+            adjustments["emotional_intelligence"] += 0.2  # 多様性への対応
+            adjustments["collaboration"] += 0.1  # 適応性
+
+        return adjustments
+
     def _calculate_conversation_metrics(
         self, messages: List[Dict]
     ) -> ConversationMetrics:

@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.security import get_current_active_user
 from ...domain.models.avatar import UserStats
 from ...domain.models.chat import ChatMessage, ChatSession
+from ...domain.models.quest import QuestProgress, QuestStatus
 from ...domain.models.user import User
 from ...infrastructure.database import get_db
 
@@ -62,6 +63,69 @@ async def get_user_conversation_history(
         )
 
     return conversation_history
+
+
+async def get_user_quest_data(user_id: int, db: AsyncSession) -> Dict:
+    """ユーザーのクエストデータを取得"""
+
+    # 完了したクエスト数
+    completed_count = (
+        await db.scalar(
+            select(func.count(QuestProgress.id)).where(
+                QuestProgress.user_id == user_id,
+                QuestProgress.status == QuestStatus.COMPLETED,
+            )
+        )
+        or 0
+    )
+
+    # 進行中のクエスト数
+    in_progress_count = (
+        await db.scalar(
+            select(func.count(QuestProgress.id)).where(
+                QuestProgress.user_id == user_id,
+                QuestProgress.status == QuestStatus.IN_PROGRESS,
+            )
+        )
+        or 0
+    )
+
+    # 連続達成日数の最大値
+    max_streak = (
+        await db.scalar(
+            select(func.max(QuestProgress.streak_count)).where(
+                QuestProgress.user_id == user_id
+            )
+        )
+        or 0
+    )
+
+    # 最近のクエスト活動（過去30日）
+    recent_quests = await db.execute(
+        select(QuestProgress)
+        .where(
+            QuestProgress.user_id == user_id,
+            QuestProgress.completed_date >= func.now() - func.interval("30 days"),
+        )
+        .order_by(QuestProgress.completed_date.desc())
+        .limit(10)
+    )
+    recent_quests_data = recent_quests.scalars().all()
+
+    # クエストタイプ別の完了数
+    quest_types = {}
+    for quest_progress in recent_quests_data:
+        if quest_progress.quest:
+            quest_type = quest_progress.quest.quest_type
+            quest_types[quest_type] = quest_types.get(quest_type, 0) + 1
+
+    return {
+        "total_completed": completed_count,
+        "in_progress": in_progress_count,
+        "max_streak_days": max_streak,
+        "recent_quest_types": quest_types,
+        "recent_activity_count": len(recent_quests_data),
+    }
 
 
 @router.post("/analyze-conversation")
@@ -123,17 +187,22 @@ async def analyze_conversation_from_database(
             current_user.id, db, limit=50
         )
 
-        if not conversation_history:
-            return {"message": "分析対象の会話履歴がありません"}
+        # クエストデータを取得
+        quest_data = await get_user_quest_data(current_user.id, db)
+
+        if not conversation_history and quest_data["total_completed"] == 0:
+            return {"message": "分析対象のデータがありません"}
 
         print(f"取得した会話履歴数: {len(conversation_history)}")
+        print(f"完了したクエスト数: {quest_data['total_completed']}")
 
         # ML分析リクエストの準備
         analysis_request = {
             "user_id": current_user.id,
             "messages": conversation_history,
+            "quest_data": quest_data,  # クエストデータを追加
             "current_skills": await get_current_user_skills(current_user.id, db),
-            "analysis_type": "conversation_history",
+            "analysis_type": "comprehensive_analysis",  # 包括的分析
             "include_context": True,  # 文脈を含めた分析
         }
 
@@ -159,7 +228,8 @@ async def analyze_conversation_from_database(
                 "feedback": analysis_result["feedback"],
                 "analysis_timestamp": analysis_result["analysis_timestamp"],
                 "conversation_count": len(conversation_history),
-                "message": "データベースベースML分析が完了しました",
+                "quest_data": quest_data,  # クエストデータも含める
+                "message": "包括的ML分析が完了しました",
             }
         else:
             print(

@@ -242,6 +242,10 @@ export default function AIChatPage() {
 
         // 静かに成功（アラートは表示しない）
         console.log(`自動分析完了 - 会話数: ${result.conversation_count || 0}`);
+        if (result.quest_data) {
+          console.log(`クエスト完了数: ${result.quest_data.total_completed || 0}`);
+          console.log(`連続達成日数: ${result.quest_data.max_streak_days || 0}`);
+        }
       } else {
         console.error('自動ML分析エラー:', response.status);
       }
