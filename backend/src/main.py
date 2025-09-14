@@ -13,6 +13,7 @@ from src.api.v1 import (
     emotions,
     feedback,
     learning,
+    quests,
     users,
 )
 
@@ -116,6 +117,7 @@ app.include_router(
 app.include_router(emotions.router, prefix="/api/emotions", tags=["感情"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["フィードバック"])
 app.include_router(learning.router, prefix="/api/learning", tags=["学習"])
+app.include_router(quests.router, prefix="/api/quests", tags=["クエスト"])
 
 
 @app.get("/")

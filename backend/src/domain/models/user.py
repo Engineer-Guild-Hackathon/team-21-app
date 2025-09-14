@@ -44,8 +44,14 @@ class User(Base):
         back_populates="student",
         cascade="all, delete-orphan",
     )
+    quest_progresses = relationship(
+        "QuestProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 # リレーション解決のために明示的に読み込む（テスト時の単独import対策）
 from .classroom import Class, LearningProgress  # noqa: E402,F401
 from .emotion import Emotion  # noqa: E402,F401
+from .quest import QuestProgress  # noqa: E402,F401
