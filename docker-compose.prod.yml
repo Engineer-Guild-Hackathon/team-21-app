@@ -1,0 +1,68 @@
+# 本番環境用Docker Compose設定
+# Kafkaセキュリティ機能を有効化
+
+version: '3.8'
+
+services:
+  # セキュアなKafka設定
+  kafka-secure:
+    image: confluentinc/cp-kafka:7.0.0
+    ports:
+      - "9092:9092"
+    environment:
+      # 基本設定
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      
+      # セキュリティ設定
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka:9092
+      
+      # SASL認証設定
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+      
+      # SSL/TLS暗号化設定
+      KAFKA_SSL_KEYSTORE_LOCATION: /var/ssl/private/kafka.server.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: ${KAFKA_SSL_PASSWORD}
+      KAFKA_SSL_KEY_PASSWORD: ${KAFKA_SSL_PASSWORD}
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /var/ssl/private/kafka.server.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: ${KAFKA_SSL_PASSWORD}
+      
+      # セキュリティ強化設定
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      KAFKA_DELETE_TOPIC_ENABLE: false
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      
+    volumes:
+      - ./ssl:/var/ssl/private
+      - ./kafka-users:/etc/kafka/users
+      - ./kafka-server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
+    networks:
+      - kafka-secure
+    depends_on:
+      - zookeeper-secure
+
+  # セキュアなZookeeper設定
+  zookeeper-secure:
+    image: confluentinc/cp-zookeeper:7.0.0
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # セキュリティ設定
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_jaas.conf
+    volumes:
+      - ./zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
+    networks:
+      - kafka-secure
+
+networks:
+  kafka-secure:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
