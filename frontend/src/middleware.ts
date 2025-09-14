@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ログイン済みユーザーが認証ページにアクセスした場合は学習ページへ案内
+  // ログイン済みユーザーが認証ページにアクセスした場合は適切なページへ案内
   if (publicPaths.includes(pathname) && token) {
     // デフォルトで学習ページにリダイレクト（ロール別分岐はクライアント側で処理）
     return NextResponse.redirect(new URL('/learning', request.url));
