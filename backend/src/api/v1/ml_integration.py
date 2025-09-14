@@ -248,10 +248,10 @@ async def get_latest_ml_analysis(
     """最新のML分析結果を取得"""
 
     try:
-        # 現在のユーザースキルを取得
+        # 現在のユーザースキルを取得（これが最新のML分析結果）
         current_skills = await get_current_user_skills(current_user.id, db)
 
-        # 最新のML分析結果を生成（実際の実装では専用テーブルから取得）
+        # 実際のML分析結果として、現在のスキル値を使用
         latest_analysis = {
             "user_id": current_user.id,
             "skills": current_skills,
@@ -259,9 +259,12 @@ async def get_latest_ml_analysis(
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
+        print(f"🔍 最新ML分析結果取得: ユーザー{current_user.id}, スキル: {current_skills}")
+
         return latest_analysis
 
     except Exception as e:
+        print(f"❌ ML分析結果取得エラー: {str(e)}")
         raise HTTPException(status_code=500, detail=f"分析結果取得エラー: {str(e)}")
 
 

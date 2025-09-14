@@ -24,6 +24,14 @@ export default function ProgressPage() {
     }
 
     fetchUserStats();
+
+    // 5秒ごとに自動更新（最新のユーザー統計を取得）
+    const interval = setInterval(() => {
+      console.log('🔄 自動更新: ユーザー統計を再取得');
+      fetchUserStats();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [isAuthenticated, router]);
 
   const fetchUserStats = async () => {

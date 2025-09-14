@@ -30,6 +30,14 @@ export default function FeedbackPage() {
     }
 
     fetchMLFeedback();
+
+    // 5秒ごとに自動更新（最新のML分析結果を取得）
+    const interval = setInterval(() => {
+      console.log('🔄 自動更新: ML分析結果を再取得');
+      fetchMLFeedback();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [isAuthenticated, router]);
 
   const fetchMLFeedback = async () => {
