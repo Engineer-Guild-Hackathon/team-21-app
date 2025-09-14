@@ -6,7 +6,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.v1 import auth, emotion_analysis, emotions, feedback, learning, users
+from src.api.v1 import (
+    auth,
+    classes,
+    emotion_analysis,
+    emotions,
+    feedback,
+    learning,
+    users,
+)
 
 
 @asynccontextmanager

@@ -1,8 +1,8 @@
-"""Fix class models
+"""Create initial tables
 
-Revision ID: 83a4b42532e9
-Revises: 8d0a8fa379c0
-Create Date: 2025-09-14 09:44:11.675622
+Revision ID: 442d12d640c9
+Revises: 83a4b42532e9
+Create Date: 2025-09-14 10:02:09.521139
 
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "83a4b42532e9"
-down_revision = "8d0a8fa379c0"
+revision = "442d12d640c9"
+down_revision = "83a4b42532e9"
 branch_labels = None
 depends_on = None
 

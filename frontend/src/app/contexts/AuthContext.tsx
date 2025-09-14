@@ -65,6 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const maxAge = 30 * 60; // 30分（サーバのトークン期限に整合）
       document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
 
+      // localStorageにもトークンを保存（API呼び出し用）
+      localStorage.setItem('token', access_token);
+
       // ユーザー情報を取得
       const userResponse = await fetch(`${apiBase}/api/users/me`, {
         headers: {
@@ -97,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     // クッキーの削除（Max-Age=0）
     document.cookie = 'token=; Path=/; Max-Age=0';
   };

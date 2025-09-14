@@ -61,7 +61,7 @@ export default function TeacherDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ヘッダー */}
         <div className="mb-8">
@@ -136,23 +136,23 @@ export default function TeacherDashboardPage() {
             </Link>
 
             <Link
-              href="/teacher/classes"
+              href="/teacher/records"
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <UserGroupIcon className="h-8 w-8 text-green-600 mr-4" />
               <div>
-                <h3 className="font-medium text-gray-900">生徒一覧</h3>
-                <p className="text-sm text-gray-500">生徒の進捗を確認</p>
+                <h3 className="font-medium text-gray-900">生徒記録</h3>
+                <p className="text-sm text-gray-500">生徒の詳細記録を確認</p>
               </div>
             </Link>
 
             <Link
-              href="/teacher/classes"
+              href="/teacher/analysis"
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <ChartBarIcon className="h-8 w-8 text-purple-600 mr-4" />
               <div>
-                <h3 className="font-medium text-gray-900">分析レポート</h3>
+                <h3 className="font-medium text-gray-900">生徒分析</h3>
                 <p className="text-sm text-gray-500">詳細な学習分析</p>
               </div>
             </Link>
