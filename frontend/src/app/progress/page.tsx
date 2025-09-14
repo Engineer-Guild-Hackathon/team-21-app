@@ -83,6 +83,18 @@ export default function ProgressPage() {
     return Math.round((average / 5.0) * 100); // 5点満点を100%に変換
   };
 
+  const isNewUser = () => {
+    if (!userStats) return false;
+
+    // 全てのスキルが初期値（1.0）の場合、新規ユーザーと判定
+    return (
+      userStats.grit_level === 1.0 &&
+      userStats.collaboration_level === 1.0 &&
+      userStats.self_regulation_level === 1.0 &&
+      userStats.emotional_intelligence_level === 1.0
+    );
+  };
+
   const getSkillColor = (level: number) => {
     if (level >= 4) return 'bg-green-500';
     if (level >= 3) return 'bg-yellow-500';
@@ -107,6 +119,23 @@ export default function ProgressPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-24">
       <h1 className="text-4xl font-bold mb-8">学習進捗</h1>
+
+      {isNewUser() && (
+        <div className="w-full max-w-7xl mb-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="flex items-center">
+              <div className="text-4xl mr-4">🎯</div>
+              <div>
+                <h2 className="text-xl font-semibold text-blue-900 mb-2">学習を始めましょう！</h2>
+                <p className="text-blue-700">
+                  AIチャットで質問したり、クエストに挑戦したりして、スキルを向上させていきましょう。
+                  学習活動が増えると、ここに進捗が表示されます。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="w-full max-w-7xl">
         {/* 全体の進捗 */}

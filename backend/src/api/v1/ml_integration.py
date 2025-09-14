@@ -342,13 +342,13 @@ async def get_current_user_skills(user_id: int, db: AsyncSession) -> Dict[str, f
     stats = result.scalar_one_or_none()
 
     if not stats:
-        # デフォルトスキル値
+        # 新しいユーザーには初期値（1.0）を返す
         return {
-            "grit": 2.0,
-            "collaboration": 2.0,
-            "self_regulation": 2.0,
-            "emotional_intelligence": 2.0,
-            "confidence": 2.0,
+            "grit": 1.0,
+            "collaboration": 1.0,
+            "self_regulation": 1.0,
+            "emotional_intelligence": 1.0,
+            "confidence": 1.0,
         }
 
     return {
@@ -448,6 +448,10 @@ def generate_feedback_from_skills(skills: Dict[str, float]) -> str:
     """スキルデータからフィードバックを生成"""
 
     feedbacks = []
+
+    # 全てのスキルが初期値（1.0）の場合、新規ユーザー向けメッセージ
+    if all(value == 1.0 for value in skills.values() if key != "confidence"):
+        return "🎯 学習を始めましょう！AIチャットで質問したり、クエストに挑戦したりして、スキルを向上させていきましょう。"
 
     if skills.get("grit", 0) >= 4.0:
         feedbacks.append(
