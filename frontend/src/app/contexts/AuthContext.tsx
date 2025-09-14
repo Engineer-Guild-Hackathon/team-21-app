@@ -141,6 +141,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: data.email,
       };
 
+      // 登録後、自動的にログインしてトークンを取得
+      try {
+        const loginResponse = await fetch(`${apiBase}/api/auth/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            username: email,
+            password: password,
+          }),
+        });
+
+        if (loginResponse.ok) {
+          const { access_token } = await loginResponse.json();
+
+          // トークンを保存
+          localStorage.setItem('token', access_token);
+          const maxAge = 30 * 60; // 30分
+          document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
+
+          console.log('Auto-login after registration successful, token saved:', access_token);
+        } else {
+          console.warn('Auto-login after registration failed, but registration succeeded');
+        }
+      } catch (loginError) {
+        console.warn('Auto-login after registration failed:', loginError);
+      }
+
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));
     } catch (error) {
