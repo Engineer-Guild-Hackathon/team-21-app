@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class UserBase(BaseModel):
@@ -10,8 +10,17 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    password_confirm: str
     role: Optional[str] = "student"
     class_id: Optional[str] = None  # クラスID（文字列）
+    terms_accepted: bool = False
+
+    @field_validator("password_confirm")
+    @classmethod
+    def validate_password_confirm(cls, v, info):
+        if "password" in info.data and v != info.data["password"]:
+            raise ValueError("パスワードが一致しません")
+        return v
 
 
 class UserLogin(BaseModel):
