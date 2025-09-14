@@ -32,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // ローカルストレージからユーザー情報を復元
+    // ローカルストレージからユーザー情報とトークンを復元
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('token');
+
+    console.log('Auth initialization - storedUser:', storedUser);
+    console.log('Auth initialization - storedToken:', storedToken);
+
+    if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
@@ -67,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // localStorageにもトークンを保存（API呼び出し用）
       localStorage.setItem('token', access_token);
+      console.log('Token saved to localStorage:', access_token);
 
       // ユーザー情報を取得
       const userResponse = await fetch(`${apiBase}/api/users/me`, {

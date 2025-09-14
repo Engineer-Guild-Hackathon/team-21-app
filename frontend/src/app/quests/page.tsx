@@ -105,6 +105,8 @@ export default function QuestsPage() {
     try {
       const token = localStorage.getItem('token');
       console.log('Token:', token);
+      console.log('All localStorage keys:', Object.keys(localStorage));
+      console.log('Is authenticated:', isAuthenticated);
 
       const response = await fetch('http://localhost:8000/api/quests/', {
         headers: {
