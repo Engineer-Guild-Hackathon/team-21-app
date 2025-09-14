@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<UserRole>('student');
+  const [classId, setClassId] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await register(email, password, role, name);
+      await register(email, password, role, name, classId);
       router.push('/');
     } catch (err) {
       setError('登録に失敗しました。入力内容を確認してください。');
@@ -151,6 +152,29 @@ export default function RegisterPage() {
                 </select>
               </div>
             </div>
+
+            {role === 'student' && (
+              <div>
+                <label htmlFor="classId" className="block text-sm font-medium text-gray-700">
+                  クラスID <span className="text-red-500">*</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="classId"
+                    name="classId"
+                    type="text"
+                    placeholder="例: ABC-123"
+                    required
+                    value={classId}
+                    onChange={e => setClassId(e.target.value.toUpperCase())}
+                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  教師から提供されたクラスIDを入力してください
+                </p>
+              </div>
+            )}
 
             <div>
               <button

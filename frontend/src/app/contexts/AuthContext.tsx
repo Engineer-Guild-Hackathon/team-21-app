@@ -17,7 +17,13 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
-  register: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    role: UserRole,
+    name: string,
+    classId?: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -95,7 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     document.cookie = 'token=; Path=/; Max-Age=0';
   };
 
-  const register = async (email: string, password: string, role: UserRole, name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    role: UserRole,
+    name: string,
+    classId?: string
+  ) => {
     try {
       // APIリクエストを実装
       const apiBase = 'http://localhost:8000';
@@ -104,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, full_name: name, role }),
+        body: JSON.stringify({ email, password, full_name: name, role, class_id: classId }),
       });
 
       if (!response.ok) {

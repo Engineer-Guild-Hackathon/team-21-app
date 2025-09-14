@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...infrastructure.database import Base
@@ -17,6 +17,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String)
     full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     role: Mapped[str] = mapped_column(String, nullable=False, default="student")
+    class_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("classes.id"), nullable=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -28,6 +31,17 @@ class User(Base):
     emotion_records = relationship(
         "Emotion",
         back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    enrolled_class = relationship(
+        "Class", back_populates="students", foreign_keys=[class_id]
+    )
+    taught_classes = relationship(
+        "Class", back_populates="teacher", foreign_keys="Class.teacher_id"
+    )
+    learning_progress = relationship(
+        "LearningProgress",
+        back_populates="student",
         cascade="all, delete-orphan",
     )
 

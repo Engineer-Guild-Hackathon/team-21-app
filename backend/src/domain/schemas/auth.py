@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: Optional[str] = "student"
+    class_id: Optional[str] = None  # クラスID（文字列）
 
 
 class UserLogin(BaseModel):
