@@ -14,6 +14,7 @@ from src.api.v1 import (
     emotions,
     feedback,
     learning,
+    ml_integration,
     quests,
     users,
 )
@@ -120,6 +121,7 @@ app.include_router(feedback.router, prefix="/api/feedback", tags=["フィード�
 app.include_router(learning.router, prefix="/api/learning", tags=["学習"])
 app.include_router(quests.router, prefix="/api/quests", tags=["クエスト"])
 app.include_router(avatars.router, prefix="/api/avatars", tags=["アバター・称号"])
+app.include_router(ml_integration.router, prefix="/api/ml", tags=["ML統合"])
 
 
 @app.get("/")
