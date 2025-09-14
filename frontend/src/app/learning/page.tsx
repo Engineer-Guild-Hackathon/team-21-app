@@ -273,9 +273,7 @@ export default function AIChatPage() {
               <ChatBubbleLeftRightIcon className="h-6 w-6 text-indigo-600 mr-2" />
               <h1 className="text-xl font-bold text-gray-900">AIチャット</h1>
             </div>
-            <p className="text-sm text-blue-600">
-              💡 自動学習分析で成長をサポート
-            </p>
+            <p className="text-sm text-blue-600">💡 自動学習分析で成長をサポート</p>
           </div>
         </div>
       </div>
