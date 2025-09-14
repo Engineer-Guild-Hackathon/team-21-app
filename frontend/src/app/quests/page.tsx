@@ -103,14 +103,25 @@ export default function QuestsPage() {
 
   const fetchQuests = async () => {
     try {
+      const token = localStorage.getItem('token');
+      console.log('Token:', token);
+
       const response = await fetch('http://localhost:8000/api/quests/', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Quests data:', data);
         setQuests(data.quests);
+      } else {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
       }
     } catch (error) {
       console.error('クエスト取得エラー:', error);
