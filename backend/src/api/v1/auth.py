@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.security import (
     authenticate_user,
     create_access_token,
@@ -25,32 +24,35 @@ async def create_default_user_setup(user_id: int, db: AsyncSession):
     """新規ユーザーにデフォルトアバターと統計情報を作成"""
     from sqlalchemy import select
 
-    # 1. デフォルト統計情報を作成
-    user_stats = UserStats(
-        user_id=user_id,
-        grit_level=1.0,
-        collaboration_level=1.0,
-        self_regulation_level=1.0,
-        emotional_intelligence_level=1.0,
-    )
-    db.add(user_stats)
-
-    # 2. デフォルトアバターを取得して設定
-    default_avatar_stmt = (
-        select(Avatar).where(Avatar.name == "デフォルトアバター").limit(1)
-    )
-    default_avatar_result = await db.execute(default_avatar_stmt)
-    default_avatar = default_avatar_result.scalar_one_or_none()
-
-    if default_avatar:
-        user_avatar = UserAvatar(
+    try:
+        # 1. デフォルト統計情報を作成
+        user_stats = UserStats(
             user_id=user_id,
-            avatar_id=default_avatar.id,
-            is_current=True,
+            grit_level=1.0,
+            collaboration_level=1.0,
+            self_regulation_level=1.0,
+            emotional_intelligence_level=1.0,
         )
-        db.add(user_avatar)
+        db.add(user_stats)
 
-    await db.commit()
+        # 2. デフォルトアバターを取得して設定（最初に見つかったアバターを使用）
+        default_avatar_stmt = select(Avatar).limit(1)
+        default_avatar_result = await db.execute(default_avatar_stmt)
+        default_avatar = default_avatar_result.scalar_one_or_none()
+
+        if default_avatar:
+            user_avatar = UserAvatar(
+                user_id=user_id,
+                avatar_id=default_avatar.id,
+                is_current=True,
+            )
+            db.add(user_avatar)
+
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        print(f"Default user setup error: {e}")
+        raise
 
 
 @router.post("/token", response_model=Token)
@@ -120,8 +122,12 @@ async def register_user(
     await db.commit()
     await db.refresh(db_user)
 
-    # 新規ユーザーにデフォルトアバターと統計情報を作成
-    await create_default_user_setup(db_user.id, db)
+    # 新規ユーザーにデフォルトアバターと統計情報を作成（エラーが発生しても登録は続行）
+    try:
+        await create_default_user_setup(db_user.id, db)
+    except Exception as e:
+        print(f"Warning: Default user setup failed: {e}")
+        # デフォルトセットアップが失敗してもユーザー登録は成功とする
 
     return db_user
 
