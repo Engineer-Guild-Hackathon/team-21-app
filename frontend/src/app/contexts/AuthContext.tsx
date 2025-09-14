@@ -32,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // ローカルストレージからユーザー情報を復元
+    // ローカルストレージからユーザー情報とトークンを復元
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('token');
+
+    console.log('Auth initialization - storedUser:', storedUser);
+    console.log('Auth initialization - storedToken:', storedToken);
+
+    if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
@@ -67,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // localStorageにもトークンを保存（API呼び出し用）
       localStorage.setItem('token', access_token);
+      console.log('Token saved to localStorage:', access_token);
 
       // ユーザー情報を取得
       const userResponse = await fetch(`${apiBase}/api/users/me`, {
@@ -134,6 +140,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: (data.role ?? 'student') as UserRole,
         email: data.email,
       };
+
+      // 登録後、自動的にログインしてトークンを取得
+      try {
+        const loginResponse = await fetch(`${apiBase}/api/auth/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            username: email,
+            password: password,
+          }),
+        });
+
+        if (loginResponse.ok) {
+          const { access_token } = await loginResponse.json();
+
+          // トークンを保存
+          localStorage.setItem('token', access_token);
+          const maxAge = 30 * 60; // 30分
+          document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
+
+          console.log('Auto-login after registration successful, token saved:', access_token);
+        } else {
+          console.warn('Auto-login after registration failed, but registration succeeded');
+        }
+      } catch (loginError) {
+        console.warn('Auto-login after registration failed:', loginError);
+      }
 
       setUser(newUser);
       localStorage.setItem('user', JSON.stringify(newUser));

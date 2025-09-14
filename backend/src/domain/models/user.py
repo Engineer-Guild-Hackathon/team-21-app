@@ -72,10 +72,16 @@ class User(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    chat_sessions = relationship(
+        "ChatSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 # リレーション解決のために明示的に読み込む（テスト時の単独import対策）
 from .avatar import UserAvatar, UserAvatarPart, UserStats, UserTitle  # noqa: E402,F401
+from .chat import ChatSession  # noqa: E402,F401
 from .classroom import Class, LearningProgress  # noqa: E402,F401
 from .emotion import Emotion  # noqa: E402,F401
 from .quest import QuestProgress  # noqa: E402,F401

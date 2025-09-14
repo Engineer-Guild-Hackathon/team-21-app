@@ -9,11 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.v1 import (
     auth,
     avatars,
+    chat,
     classes,
     emotion_analysis,
     emotions,
     feedback,
     learning,
+    ml_integration,
     quests,
     users,
 )
@@ -112,6 +114,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["認証"])
 app.include_router(users.router, prefix="/api/users", tags=["ユーザー"])
 app.include_router(classes.router, prefix="/api/classes", tags=["クラス"])
+app.include_router(chat.router, prefix="/api/chat", tags=["チャット"])
 app.include_router(
     emotion_analysis.router, prefix="/api/emotion-analysis", tags=["感情分析"]
 )
@@ -120,6 +123,7 @@ app.include_router(feedback.router, prefix="/api/feedback", tags=["フィード�
 app.include_router(learning.router, prefix="/api/learning", tags=["学習"])
 app.include_router(quests.router, prefix="/api/quests", tags=["クエスト"])
 app.include_router(avatars.router, prefix="/api/avatars", tags=["アバター・称号"])
+app.include_router(ml_integration.router, prefix="/api/ml", tags=["ML統合"])
 
 
 @app.get("/")

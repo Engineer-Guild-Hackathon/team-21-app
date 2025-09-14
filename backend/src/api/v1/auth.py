@@ -11,6 +11,7 @@ from src.core.security import (
     get_current_active_user,
     get_password_hash,
 )
+from src.domain.models.avatar import Avatar, UserAvatar, UserStats
 from src.domain.models.user import User
 from src.domain.schemas.auth import Token, UserCreate, UserResponse
 from src.infrastructure.database import get_db
@@ -18,6 +19,41 @@ from src.infrastructure.database import get_db
 router = APIRouter()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+async def create_default_user_setup(user_id: int, db: AsyncSession):
+    """新規ユーザーにデフォルトアバターと統計情報を作成"""
+    from sqlalchemy import select
+
+    try:
+        # 1. デフォルト統計情報を作成
+        user_stats = UserStats(
+            user_id=user_id,
+            grit_level=1.0,
+            collaboration_level=1.0,
+            self_regulation_level=1.0,
+            emotional_intelligence_level=1.0,
+        )
+        db.add(user_stats)
+
+        # 2. デフォルトアバターを取得して設定（最初に見つかったアバターを使用）
+        default_avatar_stmt = select(Avatar).limit(1)
+        default_avatar_result = await db.execute(default_avatar_stmt)
+        default_avatar = default_avatar_result.scalar_one_or_none()
+
+        if default_avatar:
+            user_avatar = UserAvatar(
+                user_id=user_id,
+                avatar_id=default_avatar.id,
+                is_current=True,
+            )
+            db.add(user_avatar)
+
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        print(f"Default user setup error: {e}")
+        raise
 
 
 @router.post("/token", response_model=Token)
@@ -34,7 +70,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        subject=user.email, expires_delta=access_token_expires
+        subject=user.id, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -86,6 +122,13 @@ async def register_user(
     db.add(db_user)
     await db.commit()
     await db.refresh(db_user)
+
+    # 新規ユーザーにデフォルトアバターと統計情報を作成（エラーが発生しても登録は続行）
+    try:
+        await create_default_user_setup(db_user.id, db)
+    except Exception as e:
+        print(f"Warning: Default user setup failed: {e}")
+        # デフォルトセットアップが失敗してもユーザー登録は成功とする
 
     return db_user
 
