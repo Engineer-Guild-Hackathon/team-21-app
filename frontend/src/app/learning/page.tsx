@@ -74,6 +74,11 @@ export default function AIChatPage() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // ML分析を実行（会話が5回以上になったら）
+      if (messages.length >= 5) {
+        await analyzeConversationWithML([...messages, userMessage, assistantMessage]);
+      }
     } catch (error) {
       console.error('AIチャットエラー:', error);
       const errorMessage: Message = {
@@ -85,6 +90,42 @@ export default function AIChatPage() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const analyzeConversationWithML = async (conversationMessages: Message[]) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // 会話履歴をML分析APIに送信
+      const analysisData = {
+        messages: conversationMessages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          role: msg.role,
+          timestamp: msg.timestamp.toISOString(),
+        })),
+      };
+
+      const response = await fetch('http://localhost:8000/api/ml/analyze-conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(analysisData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('ML分析結果:', result);
+
+        // 成功通知（オプション）
+        // toast.success('会話が分析されました！フィードバックページで詳細を確認できます。');
+      }
+    } catch (error) {
+      console.error('ML分析エラー:', error);
     }
   };
 
