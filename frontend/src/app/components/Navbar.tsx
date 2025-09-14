@@ -2,7 +2,6 @@
 
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import {
-  AcademicCapIcon,
   Bars3Icon,
   ChartBarIcon,
   ChatBubbleLeftRightIcon,

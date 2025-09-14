@@ -4,7 +4,6 @@ import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from '@heroicons/react/24/
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-
 interface Message {
   id: string;
   content: string;
@@ -63,8 +62,8 @@ export default function AIChatPage() {
     setIsLoading(true);
 
     try {
-      // 実際のAI APIコール（現在はモック）
-      const response = await simulateAIResponse(inputMessage);
+      // Gemini APIを使用してAI応答を取得
+      const response = await geminiChatService.sendMessage(inputMessage);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -86,28 +85,6 @@ export default function AIChatPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const simulateAIResponse = async (userInput: string): Promise<string> => {
-    // 実際のAI APIの代わりにモック応答
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const responses = [
-      'なるほど、とても良い質問ですね！詳しく説明しますね。',
-      'その問題について一緒に考えてみましょう。',
-      '素晴らしいアイデアです！さらに深く掘り下げてみましょう。',
-      'その疑問は多くの人が持つものです。解決方法を一緒に見つけましょう。',
-      'とても興味深い内容ですね。詳しく教えてください。',
-    ];
-
-    return (
-      responses[Math.floor(Math.random() * responses.length)] +
-      '\n\n' +
-      `あなたの質問「${userInput}」について、AIアシスタントが詳しくお答えします。\n\n` +
-      '実際の実装では、ここでOpenAI APIや他のAIサービスを呼び出して、\n' +
-      '学習に特化した回答を生成します。数学、理科、国語、社会、英語など、\n' +
-      'あらゆる科目についてサポートできます！'
-    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -210,13 +187,16 @@ export default function AIChatPage() {
 
         {/* 機能説明 */}
         <div className="mt-6 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-blue-900 mb-3">AIチャット機能</h3>
+          <h3 className="text-lg font-medium text-blue-900 mb-3">
+            AIチャット機能（Gemini AI搭載）
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
               <h4 className="font-medium mb-2">📚 学習サポート</h4>
               <ul className="space-y-1">
-                <li>• 数学・理科・国語の質問</li>
-                <li>• 宿題の手伝い</li>
+                <li>• 数学・理科・国語・社会・英語の質問</li>
+                <li>• 宿題の手伝いと問題解決</li>
+                <li>• 段階的な説明と具体例</li>
                 <li>• 勉強方法のアドバイス</li>
               </ul>
             </div>
@@ -226,8 +206,16 @@ export default function AIChatPage() {
                 <li>• 学習への動機づけ</li>
                 <li>• 目標設定のサポート</li>
                 <li>• 継続学習のコツ</li>
+                <li>• グリット（やり抜く力）の育成</li>
               </ul>
             </div>
+          </div>
+          <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+            <p className="text-xs text-blue-700">
+              💡 <strong>設定方法:</strong> Gemini API
+              キーを設定すると、より高度なAI機能が利用できます。 環境変数{' '}
+              <code>NEXT_PUBLIC_GEMINI_API_KEY</code> にAPIキーを設定してください。
+            </p>
           </div>
         </div>
       </div>
