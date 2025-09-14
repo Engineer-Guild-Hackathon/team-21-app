@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.security import (
     authenticate_user,
     create_access_token,
@@ -62,6 +61,7 @@ async def register_user(
         email=user_data.email,
         hashed_password=hashed_password,
         full_name=user_data.full_name,
+        role=user_data.role,
     )
     db.add(db_user)
     await db.commit()
