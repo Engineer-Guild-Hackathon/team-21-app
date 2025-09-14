@@ -412,13 +412,6 @@ export default function AIChatPage() {
               </ul>
             </div>
           </div>
-          <div className="mt-4 p-3 bg-blue-100 rounded-lg">
-            <p className="text-xs text-blue-700">
-              💡 <strong>設定方法:</strong> Gemini API
-              キーを設定すると、より高度なAI機能が利用できます。 環境変数{' '}
-              <code>NEXT_PUBLIC_GEMINI_API_KEY</code> にAPIキーを設定してください。
-            </p>
-          </div>
         </div>
       </div>
     </main>
