@@ -19,6 +19,8 @@ export default function AIChatPage() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
+  const [isAutoAnalyzing, setIsAutoAnalyzing] = useState(false);
+  const [lastAnalysisTime, setLastAnalysisTime] = useState<Date | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +32,33 @@ export default function AIChatPage() {
     // チャットセッションを初期化または既存のセッションを読み込み
     initializeChatSession();
   }, [isAuthenticated, router]);
+
+  // 自動分析のuseEffect
+  useEffect(() => {
+    if (!isAuthenticated || !currentSessionId) return;
+
+    // 会話量に応じて分析頻度を調整
+    const getAnalysisInterval = () => {
+      const userMessages = messages.filter(msg => msg.role === 'user');
+      if (userMessages.length >= 10) {
+        return 20000; // 会話が多い場合: 20秒間隔
+      } else if (userMessages.length >= 5) {
+        return 30000; // 中程度の場合: 30秒間隔
+      } else if (userMessages.length >= 3) {
+        return 45000; // 少ない場合: 45秒間隔
+      }
+      return null; // 3回未満の場合は分析しない
+    };
+
+    const interval = getAnalysisInterval();
+    if (!interval) return;
+
+    const autoAnalysisInterval = setInterval(() => {
+      performAutoAnalysis();
+    }, interval);
+
+    return () => clearInterval(autoAnalysisInterval);
+  }, [isAuthenticated, currentSessionId, messages.length]);
 
   const initializeChatSession = async () => {
     try {
@@ -221,6 +250,42 @@ export default function AIChatPage() {
     }
   };
 
+  const performAutoAnalysis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // 既に分析中の場合はスキップ
+      if (isAutoAnalyzing) return;
+
+      setIsAutoAnalyzing(true);
+      console.log('自動ML分析を実行中...');
+
+      const response = await fetch('http://localhost:8000/api/ml/analyze-from-database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('自動ML分析完了:', result);
+        setLastAnalysisTime(new Date());
+
+        // 静かに成功（アラートは表示しない）
+        console.log(`自動分析完了 - 会話数: ${result.conversation_count || 0}`);
+      } else {
+        console.error('自動ML分析エラー:', response.status);
+      }
+    } catch (error) {
+      console.error('自動ML分析エラー:', error);
+    } finally {
+      setIsAutoAnalyzing(false);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -242,6 +307,9 @@ export default function AIChatPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-gray-900">AIチャット</h1>
               <p className="mt-2 text-gray-600">AIアシスタントと学習についてお話ししましょう</p>
+              <p className="mt-1 text-sm text-blue-600">
+                💡 AIが自動で学習を分析して、あなたの成長をサポートします
+              </p>
             </div>
           </div>
         </div>
@@ -252,7 +320,23 @@ export default function AIChatPage() {
         <div className="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
           {/* ヘッダー */}
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-800">AI学習アシスタント</h2>
+            <div className="flex items-center space-x-3">
+              <h2 className="text-lg font-semibold text-gray-800">AI学習アシスタント</h2>
+              {/* 自動分析インジケーター */}
+              <div className="flex items-center space-x-2">
+                {isAutoAnalyzing && (
+                  <div className="flex items-center space-x-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>AIが学習を分析中...</span>
+                  </div>
+                )}
+                {lastAnalysisTime && !isAutoAnalyzing && (
+                  <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    ✓ 学習分析完了
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="flex space-x-2">
               <button
                 onClick={analyzeFromDatabase}
