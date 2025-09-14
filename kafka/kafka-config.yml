@@ -1,0 +1,113 @@
+# Kafka設定ファイル
+# NonCog Learning Platform用のKafka設定
+
+version: "3.8"
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.0.0
+    ports:
+      - "9092:9092"
+    environment:
+      # 基本設定
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      # パフォーマンス設定
+      KAFKA_NUM_NETWORK_THREADS: 8
+      KAFKA_NUM_IO_THREADS: 8
+      KAFKA_SOCKET_SEND_BUFFER_BYTES: 102400
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 102400
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600
+
+      # トピック設定
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # ログ設定
+      KAFKA_LOG_RETENTION_HOURS: 168 # 7日間
+      KAFKA_LOG_RETENTION_BYTES: 1073741824 # 1GB
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824 # 1GB
+      KAFKA_LOG_CLEANUP_POLICY: delete
+
+      # セキュリティ設定
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false # 手動でトピックを作成
+
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-topics",
+          "--bootstrap-server",
+          "localhost:9092",
+          "--list",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.0
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# トピック定義
+topics:
+  learn_action_events:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 604800000 # 7日間
+      cleanup.policy: delete
+
+  student_activity:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 604800000 # 7日間
+
+  learning_metrics:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 2592000000 # 30日間
+
+  emotional_state:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 604800000 # 7日間
+
+  feedback_events:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 604800000 # 7日間
+
+  ml_analysis_requests:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 86400000 # 1日間
+
+  ml_analysis_results:
+    partitions: 3
+    replication_factor: 1
+    config:
+      retention.ms: 2592000000 # 30日間
