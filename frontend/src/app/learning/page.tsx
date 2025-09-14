@@ -3,6 +3,7 @@
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { geminiChatService } from '../../lib/gemini';
 import { useAuth } from '../contexts/AuthContext';
 interface Message {
   id: string;
@@ -98,10 +99,10 @@ export default function AIChatPage() {
     return null;
   }
 
-  return (
+  return (  
     <main className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-white shadow">
+      <div className="bg-white shadow"> 
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center">
             <ChatBubbleLeftRightIcon className="h-8 w-8 text-indigo-600 mr-3" />
