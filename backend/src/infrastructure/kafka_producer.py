@@ -44,8 +44,14 @@ class KafkaEventProducer:
 
     def produce_json(self, payload: dict[str, Any]) -> None:
         if not self.enabled or not self._producer:
+            logging.info("kafka_producer_disabled or not initialized")
             return
         try:
+            logging.info(
+                "kafka_produce_attempt topic=%s payload_size=%d",
+                self.topic,
+                len(str(payload)),
+            )
 
             def _delivery(err, msg):
                 if err is not None:
@@ -58,20 +64,36 @@ class KafkaEventProducer:
                         msg.offset(),
                     )
 
+            # JSONシリアライゼーション時にdatetimeオブジェクトを文字列に変換
+            def json_serializer(obj):
+                if hasattr(obj, "isoformat"):
+                    return obj.isoformat()
+                raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+
             self._producer.produce(
-                self.topic, json.dumps(payload).encode("utf-8"), callback=_delivery
+                self.topic,
+                json.dumps(payload, default=json_serializer).encode("utf-8"),
+                callback=_delivery,
             )
+            logging.info("kafka_produce_message_sent topic=%s", self.topic)
+
+
+
+
+
             # drive delivery callbacks and ensure immediate delivery for demo
             self._producer.poll(0.5)
             try:
                 remaining = self._producer.flush(5.0)
                 if remaining > 0:
                     logging.warning("kafka_flush_incomplete remaining=%d", remaining)
+                else:
+                    logging.info("kafka_flush_completed successfully")
             except Exception:
                 logging.exception("kafka_flush_error")
-        except Exception:
+        except Exception as e:
             # best-effort: swallow errors
-            logging.exception("kafka_produce_failed")
+            logging.exception("kafka_produce_failed: %s", str(e))
 
     def flush(self, timeout: float = 0.5) -> None:
         if not self.enabled or not self._producer:
