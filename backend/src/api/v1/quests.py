@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, desc, func
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -56,26 +56,30 @@ async def get_quests(
     """利用可能なクエスト一覧を取得"""
 
     # クエリ構築
-    query = db.query(Quest).filter(Quest.is_active == True)
+    stmt = select(Quest).where(Quest.is_active == True)
 
     # フィルタ適用
     if quest_type:
-        query = query.filter(Quest.quest_type == quest_type)
+        stmt = stmt.where(Quest.quest_type == quest_type)
     if difficulty:
-        query = query.filter(Quest.difficulty == difficulty)
+        stmt = stmt.where(Quest.difficulty == difficulty)
     if is_daily is not None:
-        query = query.filter(Quest.is_daily == is_daily)
+        stmt = stmt.where(Quest.is_daily == is_daily)
 
     # レベル制限（学生のみ）
     if current_user.role == "student":
-        query = query.filter(Quest.required_level <= 1)  # 仮のレベル制限
+        stmt = stmt.where(Quest.required_level <= 1)  # 仮のレベル制限
 
     # ソートとページネーション
-    query = query.order_by(Quest.sort_order, Quest.created_at)
-    total = await db.scalar(query.count())
+    stmt = stmt.order_by(Quest.sort_order, Quest.created_at)
+
+    # 総数を取得
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = await db.scalar(count_stmt)
 
     offset = (page - 1) * size
-    quests = await db.execute(query.offset(offset).limit(size))
+    stmt = stmt.offset(offset).limit(size)
+    quests = await db.execute(stmt)
     quest_list = quests.scalars().all()
 
     return QuestListResponse(
@@ -94,11 +98,13 @@ async def get_recommended_quests(
     """ユーザーに推奨されるクエストを取得"""
 
     # ユーザーの過去の進捗を分析
-    progress_query = db.query(QuestProgress).filter(
-        QuestProgress.user_id == current_user.id,
-        QuestProgress.status == QuestStatus.COMPLETED,
+    progress_stmt = select(QuestProgress).where(
+        and_(
+            QuestProgress.user_id == current_user.id,
+            QuestProgress.status == QuestStatus.COMPLETED,
+        )
     )
-    completed_progress = await db.execute(progress_query)
+    completed_progress = await db.execute(progress_stmt)
     completed_quests = completed_progress.scalars().all()
 
     # 完了したクエストタイプを分析
@@ -115,9 +121,9 @@ async def get_recommended_quests(
     )
 
     # 推奨クエストを取得
-    recommended_query = (
-        db.query(Quest)
-        .filter(
+    recommended_stmt = (
+        select(Quest)
+        .where(
             Quest.is_active == True,
             Quest.quest_type.in_(recommended_types),
             Quest.required_level <= 1,  # 仮のレベル制限
@@ -125,7 +131,7 @@ async def get_recommended_quests(
         .limit(3)
     )
 
-    recommended_quests = await db.execute(recommended_query)
+    recommended_quests = await db.execute(recommended_stmt)
     quest_list = recommended_quests.scalars().all()
 
     return QuestRecommendationResponse(
@@ -265,21 +271,25 @@ async def get_my_progress(
     """自分のクエスト進捗一覧を取得"""
 
     # クエリ構築
-    query = (
-        db.query(QuestProgress)
+    stmt = (
+        select(QuestProgress)
         .options(selectinload(QuestProgress.quest))
-        .filter(QuestProgress.user_id == current_user.id)
+        .where(QuestProgress.user_id == current_user.id)
     )
 
     if status:
-        query = query.filter(QuestProgress.status == status)
+        stmt = stmt.where(QuestProgress.status == status)
 
     # ソートとページネーション
-    query = query.order_by(desc(QuestProgress.updated_at))
-    total = await db.scalar(query.count())
+    stmt = stmt.order_by(desc(QuestProgress.updated_at))
+
+    # 総数を取得
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = await db.scalar(count_stmt)
 
     offset = (page - 1) * size
-    progress_list = await db.execute(query.offset(offset).limit(size))
+    stmt = stmt.offset(offset).limit(size)
+    progress_list = await db.execute(stmt)
     progress_items = progress_list.scalars().all()
 
     return QuestProgressListResponse(
@@ -299,11 +309,11 @@ async def get_quest_stats(
 
     # 基本的な統計
     total_quests = await db.scalar(
-        db.query(func.count(Quest.id)).filter(Quest.is_active == True)
+        select(func.count(Quest.id)).where(Quest.is_active == True)
     )
 
     completed_count = await db.scalar(
-        db.query(func.count(QuestProgress.id)).filter(
+        select(func.count(QuestProgress.id)).where(
             and_(
                 QuestProgress.user_id == current_user.id,
                 QuestProgress.status == QuestStatus.COMPLETED,
@@ -312,7 +322,7 @@ async def get_quest_stats(
     )
 
     in_progress_count = await db.scalar(
-        db.query(func.count(QuestProgress.id)).filter(
+        select(func.count(QuestProgress.id)).where(
             and_(
                 QuestProgress.user_id == current_user.id,
                 QuestProgress.status == QuestStatus.IN_PROGRESS,
@@ -323,7 +333,7 @@ async def get_quest_stats(
     # 獲得経験値とコイン
     total_experience = (
         await db.scalar(
-            db.query(func.sum(QuestReward.reward_value)).filter(
+            select(func.sum(QuestReward.reward_value)).where(
                 and_(
                     QuestReward.user_id == current_user.id,
                     QuestReward.reward_type == "experience",
@@ -336,7 +346,7 @@ async def get_quest_stats(
 
     total_coins = (
         await db.scalar(
-            db.query(func.sum(QuestReward.reward_value)).filter(
+            select(func.sum(QuestReward.reward_value)).where(
                 and_(
                     QuestReward.user_id == current_user.id,
                     QuestReward.reward_type == "coins",
@@ -350,7 +360,7 @@ async def get_quest_stats(
     # 連続達成日数
     streak_days = (
         await db.scalar(
-            db.query(func.max(QuestProgress.streak_count)).filter(
+            select(func.max(QuestProgress.streak_count)).where(
                 QuestProgress.user_id == current_user.id
             )
         )
@@ -359,9 +369,10 @@ async def get_quest_stats(
 
     # お気に入りのクエストタイプ
     favorite_type_query = await db.execute(
-        db.query(Quest.quest_type, func.count(QuestProgress.id).label("count"))
+        select(Quest.quest_type, func.count(QuestProgress.id).label("count"))
+        .select_from(Quest)
         .join(QuestProgress)
-        .filter(
+        .where(
             and_(
                 QuestProgress.user_id == current_user.id,
                 QuestProgress.status == QuestStatus.COMPLETED,
@@ -422,12 +433,13 @@ async def get_my_rewards(
 ):
     """自分の報酬一覧を取得"""
 
-    query = db.query(QuestReward).filter(QuestReward.user_id == current_user.id)
+    stmt = select(QuestReward).where(QuestReward.user_id == current_user.id)
 
     if is_claimed is not None:
-        query = query.filter(QuestReward.is_claimed == is_claimed)
+        stmt = stmt.where(QuestReward.is_claimed == is_claimed)
 
-    rewards = await db.execute(query.order_by(desc(QuestReward.created_at)))
+    stmt = stmt.order_by(desc(QuestReward.created_at))
+    rewards = await db.execute(stmt)
     reward_list = rewards.scalars().all()
 
     return [QuestRewardResponse.from_orm(r) for r in reward_list]
