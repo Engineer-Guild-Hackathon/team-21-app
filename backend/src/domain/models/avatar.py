@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     Text,
 )
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from ...infrastructure.database import Base
@@ -41,6 +42,9 @@ class Avatar(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # リレーション
+    user_avatars = relationship("UserAvatar", back_populates="avatar")
+
 
 class AvatarPart(Base):
     """アバターパーツ（帽子、眼鏡、アクセサリーなど）"""
@@ -60,6 +64,9 @@ class AvatarPart(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # リレーション
+    user_avatar_parts = relationship("UserAvatarPart", back_populates="avatar_part")
+
 
 class UserAvatar(Base):
     """ユーザーのアバター設定"""
@@ -72,7 +79,9 @@ class UserAvatar(Base):
     is_current = Column(Boolean, default=False)  # 現在使用中のアバター
     unlocked_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # リレーション（後で設定）
+    # リレーション
+    user = relationship("User", back_populates="user_avatars")
+    avatar = relationship("Avatar", back_populates="user_avatars")
 
 
 class UserAvatarPart(Base):
@@ -86,7 +95,9 @@ class UserAvatarPart(Base):
     is_equipped = Column(Boolean, default=False)  # 現在装備中かどうか
     unlocked_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # リレーション（後で設定）
+    # リレーション
+    user = relationship("User", back_populates="user_avatar_parts")
+    avatar_part = relationship("AvatarPart", back_populates="user_avatar_parts")
 
 
 class Title(Base):
@@ -112,6 +123,9 @@ class Title(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # リレーション
+    user_titles = relationship("UserTitle", back_populates="title")
+
 
 class UserTitle(Base):
     """ユーザーの称号所持状況"""
@@ -124,7 +138,9 @@ class UserTitle(Base):
     is_current = Column(Boolean, default=False)  # 現在使用中の称号
     unlocked_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # リレーション（後で設定）
+    # リレーション
+    user = relationship("User", back_populates="user_titles")
+    title = relationship("Title", back_populates="user_titles")
 
 
 class UserStats(Base):
@@ -158,4 +174,5 @@ class UserStats(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # リレーション（後で設定）
+    # リレーション
+    user = relationship("User", back_populates="user_stats")

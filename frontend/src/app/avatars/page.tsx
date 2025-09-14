@@ -115,7 +115,7 @@ export default function AvatarsPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
