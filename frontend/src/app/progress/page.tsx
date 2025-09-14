@@ -28,8 +28,15 @@ export default function ProgressPage() {
 
   const fetchUserStats = async () => {
     try {
+      console.log('🔍 ユーザー統計取得開始');
+      
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.error('❌ 認証トークンが見つかりません');
+        return;
+      }
+
+      console.log('📤 ユーザー統計取得リクエスト送信');
 
       const response = await fetch('http://localhost:8000/api/avatars/stats', {
         headers: {
@@ -37,12 +44,18 @@ export default function ProgressPage() {
         },
       });
 
+      console.log('📥 ユーザー統計レスポンス:', response.status, response.statusText);
+
       if (response.ok) {
         const stats = await response.json();
+        console.log('✅ ユーザー統計取得成功:', stats);
         setUserStats(stats);
+      } else {
+        const errorText = await response.text();
+        console.error('❌ ユーザー統計取得失敗:', response.status, errorText);
       }
     } catch (error) {
-      console.error('ユーザー統計取得エラー:', error);
+      console.error('❌ ユーザー統計取得エラー:', error);
     } finally {
       setIsLoading(false);
     }

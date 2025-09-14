@@ -34,8 +34,15 @@ export default function FeedbackPage() {
 
   const fetchMLFeedback = async () => {
     try {
+      console.log('🔍 フィードバック取得開始');
+
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.error('❌ 認証トークンが見つかりません');
+        return;
+      }
+
+      console.log('📤 ML分析結果取得リクエスト送信');
 
       // 最新のML分析結果を取得
       const response = await fetch('http://localhost:8000/api/ml/latest-analysis', {
@@ -44,8 +51,11 @@ export default function FeedbackPage() {
         },
       });
 
+      console.log('📥 ML分析結果レスポンス:', response.status, response.statusText);
+
       if (response.ok) {
         const analysisResult = await response.json();
+        console.log('✅ ML分析結果取得成功:', analysisResult);
 
         const mlFeedback: MLFeedback = {
           user_id: analysisResult.user_id,
@@ -54,12 +64,14 @@ export default function FeedbackPage() {
           analysis_timestamp: analysisResult.analysis_timestamp,
         };
 
+        console.log('📊 フィードバック設定:', mlFeedback);
         setMlFeedback(mlFeedback);
       } else {
-        console.error('ML分析結果の取得に失敗しました:', response.status);
+        const errorText = await response.text();
+        console.error('❌ ML分析結果の取得に失敗しました:', response.status, errorText);
       }
     } catch (error) {
-      console.error('フィードバック取得エラー:', error);
+      console.error('❌ フィードバック取得エラー:', error);
     } finally {
       setIsLoading(false);
     }
