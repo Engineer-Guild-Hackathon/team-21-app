@@ -75,8 +75,8 @@ export default function AIChatPage() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // ML分析を実行（会話が5回以上になったら）
-      if (messages.length >= 5) {
+      // ML分析を実行（会話が1回以上になったら）
+      if (messages.length >= 1) {
         await analyzeConversationWithML([...messages, userMessage, assistantMessage]);
       }
     } catch (error) {

@@ -37,71 +37,32 @@ export default function FeedbackPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // 最新のML分析結果を取得（実際の実装では専用APIエンドポイントが必要）
-      const response = await fetch('http://localhost:8000/api/avatars/stats', {
+      // 最新のML分析結果を取得
+      const response = await fetch('http://localhost:8000/api/ml/latest-analysis', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
-        const stats = await response.json();
+        const analysisResult = await response.json();
 
-        // ダミーのML分析結果を生成（実際の実装では専用APIから取得）
-        const mockFeedback: MLFeedback = {
-          user_id: user?.id || 0,
-          skills: {
-            grit: stats.grit_level || 2.5,
-            collaboration: stats.collaboration_level || 2.3,
-            self_regulation: stats.self_regulation_level || 2.8,
-            emotional_intelligence: stats.emotional_intelligence_level || 2.1,
-            confidence: 2.4,
-          },
-          feedback: generateFeedbackFromSkills({
-            grit: stats.grit_level || 2.5,
-            collaboration: stats.collaboration_level || 2.3,
-            self_regulation: stats.self_regulation_level || 2.8,
-            emotional_intelligence: stats.emotional_intelligence_level || 2.1,
-            confidence: 2.4,
-          }),
-          analysis_timestamp: new Date().toISOString(),
+        const mlFeedback: MLFeedback = {
+          user_id: analysisResult.user_id,
+          skills: analysisResult.skills,
+          feedback: analysisResult.feedback,
+          analysis_timestamp: analysisResult.analysis_timestamp,
         };
 
-        setMlFeedback(mockFeedback);
+        setMlFeedback(mlFeedback);
+      } else {
+        console.error('ML分析結果の取得に失敗しました:', response.status);
       }
     } catch (error) {
       console.error('フィードバック取得エラー:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const generateFeedbackFromSkills = (skills: any) => {
-    const feedbacks = [];
-
-    if (skills.grit >= 4.0) {
-      feedbacks.push(
-        '🌟 素晴らしいやり抜く力を持っています！困難な課題にも諦めずに取り組む姿勢が見られます。'
-      );
-    } else if (skills.grit >= 3.0) {
-      feedbacks.push('👍 やり抜く力が向上しています。目標を設定して継続的に取り組んでみましょう。');
-    } else {
-      feedbacks.push(
-        '💪 やり抜く力を鍛えるために、小さな目標から始めて達成感を積み重ねていきましょう。'
-      );
-    }
-
-    if (skills.collaboration >= 4.0) {
-      feedbacks.push('🤝 協調性がとても高いです！他者との協力を大切にしていますね。');
-    } else if (skills.collaboration >= 3.0) {
-      feedbacks.push('👥 協調性が育っています。グループ学習やペア学習を活用してみましょう。');
-    } else {
-      feedbacks.push(
-        '🤝 協調性を高めるために、友達と一緒に勉強したり、質問を積極的にしてみましょう。'
-      );
-    }
-
-    return feedbacks.join('\n\n');
   };
 
   if (isLoading) {

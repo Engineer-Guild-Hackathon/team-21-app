@@ -4,6 +4,7 @@ MLサービスとの統合API
 
 import os
 from typing import Dict, List, Optional
+from datetime import datetime
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -237,6 +238,91 @@ async def update_user_stats_from_progress(
 
     await db.commit()
     await db.refresh(stats)
+
+
+@router.get("/latest-analysis")
+async def get_latest_ml_analysis(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """最新のML分析結果を取得"""
+
+    try:
+        # 現在のユーザースキルを取得
+        current_skills = await get_current_user_skills(current_user.id, db)
+
+        # 最新のML分析結果を生成（実際の実装では専用テーブルから取得）
+        latest_analysis = {
+            "user_id": current_user.id,
+            "skills": current_skills,
+            "feedback": generate_feedback_from_skills(current_skills),
+            "analysis_timestamp": datetime.now().isoformat(),
+        }
+
+        return latest_analysis
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"分析結果取得エラー: {str(e)}")
+
+
+def generate_feedback_from_skills(skills: Dict[str, float]) -> str:
+    """スキルデータからフィードバックを生成"""
+
+    feedbacks = []
+
+    if skills.get("grit", 0) >= 4.0:
+        feedbacks.append(
+            "🌟 素晴らしいやり抜く力を持っています！困難な課題にも諦めずに取り組む姿勢が見られます。"
+        )
+    elif skills.get("grit", 0) >= 3.0:
+        feedbacks.append(
+            "👍 やり抜く力が向上しています。目標を設定して継続的に取り組んでみましょう。"
+        )
+    else:
+        feedbacks.append(
+            "💪 やり抜く力を鍛えるために、小さな目標から始めて達成感を積み重ねていきましょう。"
+        )
+
+    if skills.get("collaboration", 0) >= 4.0:
+        feedbacks.append(
+            "🤝 協調性がとても高いです！他者との協力を大切にしていますね。"
+        )
+    elif skills.get("collaboration", 0) >= 3.0:
+        feedbacks.append(
+            "👥 協調性が育っています。グループ学習やペア学習を活用してみましょう。"
+        )
+    else:
+        feedbacks.append(
+            "🤝 協調性を高めるために、友達と一緒に勉強したり、質問を積極的にしてみましょう。"
+        )
+
+    if skills.get("self_regulation", 0) >= 4.0:
+        feedbacks.append(
+            "🎯 自己制御力が優れています！計画的に学習を進められています。"
+        )
+    elif skills.get("self_regulation", 0) >= 3.0:
+        feedbacks.append(
+            "📝 自己制御力が向上しています。学習計画を立てて実行してみましょう。"
+        )
+    else:
+        feedbacks.append(
+            "⏰ 自己制御力を高めるために、学習時間を決めて集中して取り組んでみましょう。"
+        )
+
+    if skills.get("emotional_intelligence", 0) >= 4.0:
+        feedbacks.append(
+            "💝 感情知能が高いです！自分の感情を理解し、適切に表現できています。"
+        )
+    elif skills.get("emotional_intelligence", 0) >= 3.0:
+        feedbacks.append(
+            "😊 感情知能が育っています。感情を言葉で表現する練習をしてみましょう。"
+        )
+    else:
+        feedbacks.append(
+            "💭 感情知能を高めるために、自分の気持ちを振り返る時間を作ってみましょう。"
+        )
+
+    return "\n\n".join(feedbacks)
 
 
 @router.get("/health")
