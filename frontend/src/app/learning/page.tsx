@@ -187,6 +187,40 @@ export default function AIChatPage() {
     }
   };
 
+  const analyzeFromDatabase = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      console.log('データベースから会話履歴を取得してML分析を実行中...');
+
+      const response = await fetch('http://localhost:8000/api/ml/analyze-from-database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('データベースベースML分析結果:', result);
+
+        // 成功メッセージを表示
+        alert(
+          `データベースベースML分析が完了しました！\n分析した会話数: ${result.conversation_count || 0}`
+        );
+      } else {
+        const errorData = await response.json();
+        console.error('データベースベースML分析エラー:', errorData);
+        alert(`ML分析エラー: ${errorData.detail || '不明なエラー'}`);
+      }
+    } catch (error) {
+      console.error('データベースベースML分析エラー:', error);
+      alert(`ML分析エラー: ${error}`);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -216,6 +250,31 @@ export default function AIChatPage() {
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         {/* チャットエリア */}
         <div className="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
+          {/* ヘッダー */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-800">AI学習アシスタント</h2>
+            <div className="flex space-x-2">
+              <button
+                onClick={analyzeFromDatabase}
+                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+                title="データベースから会話履歴を取得してML分析を実行"
+              >
+                履歴分析
+              </button>
+              <button
+                onClick={() => router.push('/progress')}
+                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              >
+                進捗
+              </button>
+              <button
+                onClick={() => router.push('/feedback')}
+                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+              >
+                フィードバック
+              </button>
+            </div>
+          </div>
           {/* メッセージ表示エリア */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map(message => (

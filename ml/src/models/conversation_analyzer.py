@@ -141,6 +141,132 @@ class ConversationAnalyzer:
             confidence=confidence_score,
         )
 
+    def analyze_conversation_with_context(
+        self, messages: List[Dict]
+    ) -> NonCognitiveSkills:
+        """会話履歴を文脈を含めて分析（データベースベース分析用）"""
+        if not messages:
+            return NonCognitiveSkills()
+
+        # 時系列で会話を分析し、成長の軌跡を追跡
+        user_messages = [msg for msg in messages if msg.get("role") == "user"]
+
+        # 基本的な分析を実行
+        basic_skills = self.analyze_conversation(messages)
+
+        # 文脈を考慮した補正を適用
+        context_adjustments = self._calculate_context_adjustments(messages)
+
+        # スキルに文脈補正を適用
+        adjusted_skills = NonCognitiveSkills(
+            grit=basic_skills.grit + context_adjustments.get("grit", 0),
+            collaboration=basic_skills.collaboration
+            + context_adjustments.get("collaboration", 0),
+            self_regulation=basic_skills.self_regulation
+            + context_adjustments.get("self_regulation", 0),
+            emotional_intelligence=basic_skills.emotional_intelligence
+            + context_adjustments.get("emotional_intelligence", 0),
+            confidence=basic_skills.confidence
+            + context_adjustments.get("confidence", 0),
+        )
+
+        # スコアを0.0-5.0の範囲に制限
+        return NonCognitiveSkills(
+            grit=max(0.0, min(5.0, adjusted_skills.grit)),
+            collaboration=max(0.0, min(5.0, adjusted_skills.collaboration)),
+            self_regulation=max(0.0, min(5.0, adjusted_skills.self_regulation)),
+            emotional_intelligence=max(
+                0.0, min(5.0, adjusted_skills.emotional_intelligence)
+            ),
+            confidence=max(0.0, min(5.0, adjusted_skills.confidence)),
+        )
+
+    def _calculate_context_adjustments(self, messages: List[Dict]) -> Dict[str, float]:
+        """文脈を考慮したスキル補正値を計算"""
+        adjustments = {
+            "grit": 0.0,
+            "collaboration": 0.0,
+            "self_regulation": 0.0,
+            "emotional_intelligence": 0.0,
+            "confidence": 0.0,
+        }
+
+        if len(messages) < 2:
+            return adjustments
+
+        # 会話の継続性を評価（長期間の継続的な学習を示す）
+        if len(messages) > 10:
+            adjustments["grit"] += 0.3  # 継続性
+            adjustments["self_regulation"] += 0.2  # 自己管理
+
+        # 質問の質と深さを評価
+        user_messages = [msg for msg in messages if msg.get("role") == "user"]
+        question_quality = self._evaluate_question_quality(user_messages)
+
+        if question_quality > 0.7:
+            adjustments["confidence"] += 0.2  # 自信
+            adjustments["emotional_intelligence"] += 0.1  # 感情理解
+
+        # 学習トピックの多様性を評価
+        topic_diversity = self._evaluate_topic_diversity(user_messages)
+        if topic_diversity > 0.6:
+            adjustments["collaboration"] += 0.2  # 協調性
+            adjustments["emotional_intelligence"] += 0.1  # 感情理解
+
+        return adjustments
+
+    def _evaluate_question_quality(self, user_messages: List[Dict]) -> float:
+        """ユーザーの質問の質を評価"""
+        if not user_messages:
+            return 0.0
+
+        quality_indicators = [
+            "なぜ",
+            "どのように",
+            "なぜなら",
+            "例えば",
+            "具体的に",
+            "違いは",
+            "関係は",
+            "意味は",
+            "理由は",
+            "方法は",
+        ]
+
+        total_questions = len(user_messages)
+        quality_questions = 0
+
+        for msg in user_messages:
+            content = msg.get("content", "").lower()
+            if any(indicator in content for indicator in quality_indicators):
+                quality_questions += 1
+
+        return quality_questions / total_questions if total_questions > 0 else 0.0
+
+    def _evaluate_topic_diversity(self, user_messages: List[Dict]) -> float:
+        """学習トピックの多様性を評価"""
+        if not user_messages:
+            return 0.0
+
+        topics = set()
+        topic_keywords = {
+            "数学": ["数学", "算数", "計算", "方程式", "幾何", "代数"],
+            "国語": ["国語", "日本語", "文章", "読解", "作文", "文法"],
+            "理科": ["理科", "科学", "実験", "物理", "化学", "生物"],
+            "社会": ["社会", "歴史", "地理", "政治", "経済", "文化"],
+            "英語": ["英語", "英会話", "単語", "文法", "リスニング"],
+            "芸術": ["芸術", "音楽", "美術", "絵画", "演奏"],
+            "体育": ["体育", "運動", "スポーツ", "健康", "体力"],
+        }
+
+        for msg in user_messages:
+            content = msg.get("content", "").lower()
+            for topic, keywords in topic_keywords.items():
+                if any(keyword in content for keyword in keywords):
+                    topics.add(topic)
+
+        return len(topics) / len(topic_keywords)
+
     def _calculate_conversation_metrics(
         self, messages: List[Dict]
     ) -> ConversationMetrics:

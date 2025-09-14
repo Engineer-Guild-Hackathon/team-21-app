@@ -11,12 +11,10 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from ..models.conversation_analyzer import ConversationAnalyzer, NonCognitiveSkills
-from ..models.progress_predictor import (
-    LearningActivity,
-    ProgressPrediction,
-    ProgressPredictor,
-)
+from ..models.conversation_analyzer import (ConversationAnalyzer,
+                                            NonCognitiveSkills)
+from ..models.progress_predictor import (LearningActivity, ProgressPrediction,
+                                         ProgressPredictor)
 
 app = FastAPI(
     title="NonCog ML Service",

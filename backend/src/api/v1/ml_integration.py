@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.security import get_current_active_user
 from ...domain.models.avatar import UserStats
+from ...domain.models.chat import ChatMessage, ChatSession
 from ...domain.models.user import User
 from ...infrastructure.database import get_db
 
@@ -26,6 +27,41 @@ async def get_ml_client():
     """MLサービス用のHTTPクライアント"""
     async with httpx.AsyncClient() as client:
         yield client
+
+
+async def get_user_conversation_history(
+    user_id: int, db: AsyncSession, limit: int = 50
+) -> List[Dict]:
+    """ユーザーの会話履歴をデータベースから取得"""
+
+    # 最新のチャットセッションから会話を取得
+    stmt = (
+        select(ChatMessage)
+        .join(ChatSession)
+        .where(ChatSession.user_id == user_id)
+        .order_by(ChatMessage.created_at.desc())
+        .limit(limit)
+    )
+
+    result = await db.execute(stmt)
+    messages = result.scalars().all()
+
+    # 時系列順に並び替え（古い順）
+    messages.reverse()
+
+    # ML分析用の形式に変換
+    conversation_history = []
+    for message in messages:
+        conversation_history.append(
+            {
+                "role": message.role,
+                "content": message.content,
+                "timestamp": message.created_at.isoformat(),
+                "session_id": message.session_id,
+            }
+        )
+
+    return conversation_history
 
 
 @router.post("/analyze-conversation")
@@ -72,6 +108,74 @@ async def analyze_conversation_with_ml(
         raise HTTPException(status_code=503, detail=f"MLサービス接続エラー: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"会話分析エラー: {str(e)}")
+
+
+@router.post("/analyze-from-database")
+async def analyze_conversation_from_database(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+    ml_client: httpx.AsyncClient = Depends(get_ml_client),
+):
+    """データベースから会話履歴を取得してML分析を実行"""
+    try:
+        # データベースから会話履歴を取得
+        conversation_history = await get_user_conversation_history(
+            current_user.id, db, limit=50
+        )
+
+        if not conversation_history:
+            return {"message": "分析対象の会話履歴がありません"}
+
+        print(f"取得した会話履歴数: {len(conversation_history)}")
+
+        # ML分析リクエストの準備
+        analysis_request = {
+            "user_id": current_user.id,
+            "messages": conversation_history,
+            "current_skills": await get_current_user_skills(current_user.id, db),
+            "analysis_type": "conversation_history",
+            "include_context": True,  # 文脈を含めた分析
+        }
+
+        # MLサービスにリクエスト送信
+        response = await ml_client.post(
+            f"{ML_SERVICE_URL}/analyze-conversation",
+            json=analysis_request,
+            timeout=60.0,  # より長いタイムアウト
+        )
+
+        if response.status_code == 200:
+            analysis_result = response.json()
+            print(f"データベースベースML分析結果: {analysis_result}")
+
+            # ユーザー統計を更新
+            await update_user_stats_from_analysis(
+                current_user.id, analysis_result["skills"], db
+            )
+
+            return {
+                "user_id": current_user.id,
+                "skills": analysis_result["skills"],
+                "feedback": analysis_result["feedback"],
+                "analysis_timestamp": analysis_result["analysis_timestamp"],
+                "conversation_count": len(conversation_history),
+                "message": "データベースベースML分析が完了しました",
+            }
+        else:
+            print(
+                f"データベースベースML分析エラー: {response.status_code} - {response.text}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"データベースベースML分析エラー: {response.text}",
+            )
+
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=503, detail=f"MLサービス接続エラー: {str(e)}")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"データベースベースML分析エラー: {str(e)}"
+        )
 
 
 @router.post("/update-progress")
