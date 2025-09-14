@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import TermsOfService from '../../../components/TermsOfService';
 import { useAuth, UserRole } from '../../contexts/AuthContext';
 
 export default function RegisterPage() {
@@ -12,6 +13,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<UserRole>('student');
   const [classId, setClassId] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -26,10 +28,15 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!termsAccepted) {
+      setError('利用規約への同意が必要です');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await register(email, password, role, name, classId);
+      await register(email, password, role, name, classId, termsAccepted);
       router.push('/');
     } catch (err) {
       setError('登録に失敗しました。入力内容を確認してください。');
@@ -176,15 +183,26 @@ export default function RegisterPage() {
               </div>
             )}
 
+            {/* 同意書コンポーネント */}
+            <div className="mt-6">
+              <TermsOfService onAccept={setTermsAccepted} accepted={termsAccepted} />
+            </div>
+
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
-                className={`flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                disabled={isLoading || !termsAccepted}
+                className={`flex w-full justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  isLoading || !termsAccepted
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {isLoading ? '登録中...' : '登録する'}
+                {isLoading
+                  ? '登録中...'
+                  : termsAccepted
+                    ? '登録する'
+                    : '利用規約に同意してください'}
               </button>
             </div>
           </form>

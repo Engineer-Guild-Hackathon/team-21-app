@@ -47,7 +47,7 @@ async def get_avatars(
 ):
     """利用可能なアバター一覧を取得"""
 
-    stmt = select(Avatar).where(Avatar.is_active == True)
+    stmt = select(Avatar).where(Avatar.is_active)
 
     if category:
         stmt = stmt.where(Avatar.category == category)
@@ -71,7 +71,7 @@ async def get_avatar_parts(
 ):
     """利用可能なアバターパーツ一覧を取得"""
 
-    stmt = select(AvatarPart).where(AvatarPart.is_active == True)
+    stmt = select(AvatarPart).where(AvatarPart.is_active)
 
     if part_type:
         stmt = stmt.where(AvatarPart.part_type == part_type)
@@ -95,7 +95,7 @@ async def get_titles(
 ):
     """利用可能な称号一覧を取得"""
 
-    stmt = select(Title).where(Title.is_active == True)
+    stmt = select(Title).where(Title.is_active)
 
     if category:
         stmt = stmt.where(Title.category == category)
@@ -121,9 +121,7 @@ async def get_user_profile(
     current_avatar_stmt = (
         select(UserAvatar)
         .options(selectinload(UserAvatar.avatar))
-        .where(
-            and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current == True)
-        )
+        .where(and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current))
     )
     current_avatar_result = await db.execute(current_avatar_stmt)
     current_avatar = current_avatar_result.scalar_one_or_none()
@@ -132,7 +130,7 @@ async def get_user_profile(
     current_title_stmt = (
         select(UserTitle)
         .options(selectinload(UserTitle.title))
-        .where(and_(UserTitle.user_id == current_user.id, UserTitle.is_current == True))
+        .where(and_(UserTitle.user_id == current_user.id, UserTitle.is_current))
     )
     current_title_result = await db.execute(current_title_stmt)
     current_title = current_title_result.scalar_one_or_none()
@@ -213,7 +211,7 @@ async def change_avatar(
 
     # 現在のアバターを非アクティブにする
     current_avatar_stmt = select(UserAvatar).where(
-        and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current == True)
+        and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current)
     )
     current_avatar_result = await db.execute(current_avatar_stmt)
     current_avatar = current_avatar_result.scalar_one_or_none()
@@ -259,7 +257,7 @@ async def change_title(
 
     # 現在の称号を非アクティブにする
     current_title_stmt = select(UserTitle).where(
-        and_(UserTitle.user_id == current_user.id, UserTitle.is_current == True)
+        and_(UserTitle.user_id == current_user.id, UserTitle.is_current)
     )
     current_title_result = await db.execute(current_title_stmt)
     current_title = current_title_result.scalar_one_or_none()
@@ -341,7 +339,7 @@ async def check_and_unlock_achievements(user_id: int, db: AsyncSession):
     # アバター解除チェック
     avatars_stmt = select(Avatar).where(
         and_(
-            Avatar.is_active == True,
+            Avatar.is_active,
             Avatar.unlock_condition_type.isnot(None),
             Avatar.unlock_condition_value.isnot(None),
         )
@@ -385,7 +383,7 @@ async def check_and_unlock_achievements(user_id: int, db: AsyncSession):
     # 称号解除チェック
     titles_stmt = select(Title).where(
         and_(
-            Title.is_active == True,
+            Title.is_active,
             Title.unlock_condition_type.isnot(None),
             Title.unlock_condition_value.isnot(None),
         )
