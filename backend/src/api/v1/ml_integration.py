@@ -259,7 +259,9 @@ async def get_latest_ml_analysis(
             "analysis_timestamp": datetime.now().isoformat(),
         }
 
-        print(f"🔍 最新ML分析結果取得: ユーザー{current_user.id}, スキル: {current_skills}")
+        print(
+            f"🔍 最新ML分析結果取得: ユーザー{current_user.id}, スキル: {current_skills}"
+        )
 
         return latest_analysis
 

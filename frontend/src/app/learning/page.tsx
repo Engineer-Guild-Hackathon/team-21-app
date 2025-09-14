@@ -18,6 +18,7 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,19 +27,44 @@ export default function AIChatPage() {
       return;
     }
 
-    // 初期メッセージを追加
-    if (messages.length === 0) {
-      setMessages([
-        {
-          id: '1',
-          content:
-            'こんにちは！AIアシスタントです。学習について何でもお聞きください。宿題の手伝い、勉強のコツ、質問など、お気軽にどうぞ！',
-          role: 'assistant',
-          timestamp: new Date(),
+    // チャットセッションを初期化または既存のセッションを読み込み
+    initializeChatSession();
+  }, [isAuthenticated, router]);
+
+  const initializeChatSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // 新しいチャットセッションを作成
+      const response = await fetch('http://localhost:8000/api/chat/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      ]);
+        body: JSON.stringify({ title: 'AIチャット' }),
+      });
+
+      if (response.ok) {
+        const session = await response.json();
+        setCurrentSessionId(session.id);
+
+        // 初期メッセージを追加
+        setMessages([
+          {
+            id: '1',
+            content:
+              'こんにちは！AIアシスタントです。学習について何でもお聞きください。宿題の手伝い、勉強のコツ、質問など、お気軽にどうぞ！',
+            role: 'assistant',
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('チャットセッション初期化エラー:', error);
     }
-  }, [isAuthenticated, router, messages.length]);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -63,6 +89,9 @@ export default function AIChatPage() {
     setIsLoading(true);
 
     try {
+      // ユーザーメッセージをデータベースに保存
+      await saveMessageToDatabase(userMessage.content, 'user');
+
       // Gemini APIを使用してAI応答を取得
       const response = await geminiChatService.sendMessage(inputMessage);
 
@@ -74,6 +103,9 @@ export default function AIChatPage() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // AI応答をデータベースに保存
+      await saveMessageToDatabase(assistantMessage.content, 'assistant');
 
       // ML分析を実行（会話が1回以上になったら）
       if (messages.length >= 1) {
@@ -90,6 +122,34 @@ export default function AIChatPage() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveMessageToDatabase = async (content: string, role: 'user' | 'assistant') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !currentSessionId) return;
+
+      const response = await fetch(
+        `http://localhost:8000/api/chat/sessions/${currentSessionId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            content: content,
+            role: role,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('メッセージ保存エラー:', response.status);
+      }
+    } catch (error) {
+      console.error('メッセージ保存エラー:', error);
     }
   };
 
