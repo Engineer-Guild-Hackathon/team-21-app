@@ -162,7 +162,7 @@ async def start_quest(
 
     # 既存の進捗確認
     existing_progress = await db.execute(
-        db.query(QuestProgress).filter(
+        select(QuestProgress).where(
             and_(
                 QuestProgress.user_id == current_user.id,
                 QuestProgress.quest_id == quest_id,
