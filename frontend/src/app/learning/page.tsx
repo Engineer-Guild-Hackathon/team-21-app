@@ -266,24 +266,23 @@ export default function AIChatPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center">
-            <ChatBubbleLeftRightIcon className="h-8 w-8 text-indigo-600 mr-3" />
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900">AIチャット</h1>
-              <p className="mt-2 text-gray-600">AIアシスタントと学習についてお話ししましょう</p>
-              <p className="mt-1 text-sm text-blue-600">
-                💡 AIが自動で学習を分析して、あなたの成長をサポートします
-              </p>
+      <div className="bg-white shadow-sm">
+        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <ChatBubbleLeftRightIcon className="h-6 w-6 text-indigo-600 mr-2" />
+              <h1 className="text-xl font-bold text-gray-900">AIチャット</h1>
             </div>
+            <p className="text-sm text-blue-600">
+              💡 自動学習分析で成長をサポート
+            </p>
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         {/* チャットエリア */}
-        <div className="bg-white rounded-lg shadow-lg h-[600px] flex flex-col">
+        <div className="bg-white rounded-lg shadow-lg h-[700px] flex flex-col">
           {/* ヘッダー */}
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center space-x-3">
