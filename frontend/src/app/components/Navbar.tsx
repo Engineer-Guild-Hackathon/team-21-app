@@ -2,12 +2,13 @@
 
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import {
-  AcademicCapIcon,
   Bars3Icon,
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   HomeIcon,
+  SparklesIcon,
+  StarIcon,
   UserCircleIcon,
   UserGroupIcon,
   XMarkIcon,
@@ -21,7 +22,9 @@ import { useAuth, UserRole } from '../contexts/AuthContext';
 const navigationByRole: Record<UserRole, Array<{ name: string; href: string; icon: any }>> = {
   student: [
     { name: 'ホーム', href: '/', icon: HomeIcon },
-    { name: '学習', href: '/learning', icon: AcademicCapIcon },
+    { name: 'AIチャット', href: '/learning', icon: ChatBubbleLeftRightIcon },
+    { name: 'クエスト', href: '/quests', icon: StarIcon },
+    { name: 'アバター', href: '/avatars', icon: SparklesIcon },
     { name: 'フィードバック', href: '/feedback', icon: ChatBubbleLeftRightIcon },
     { name: '進捗', href: '/progress', icon: ChartBarIcon },
   ],
@@ -32,10 +35,10 @@ const navigationByRole: Record<UserRole, Array<{ name: string; href: string; ico
     { name: 'アドバイス', href: '/advice', icon: ChatBubbleLeftRightIcon },
   ],
   teacher: [
-    { name: 'ホーム', href: '/', icon: HomeIcon },
-    { name: 'クラス管理', href: '/class', icon: UserGroupIcon },
-    { name: '生徒分析', href: '/analysis', icon: ChartBarIcon },
-    { name: '指導記録', href: '/records', icon: ClipboardDocumentListIcon },
+    { name: 'ホーム', href: '/teacher/dashboard', icon: HomeIcon },
+    { name: 'クラス管理', href: '/teacher/classes', icon: UserGroupIcon },
+    { name: '生徒分析', href: '/teacher/analysis', icon: ChartBarIcon },
+    { name: '指導記録', href: '/teacher/records', icon: ClipboardDocumentListIcon },
   ],
 };
 
@@ -51,7 +54,7 @@ const menuItemsByRole: Record<UserRole, Array<{ name: string; href: string }>> =
     { name: '設定', href: '/settings' },
   ],
   teacher: [
-    { name: 'クラス設定', href: '/class/settings' },
+    { name: 'クラス設定', href: '/teacher/classes' },
     { name: '教材管理', href: '/materials' },
     { name: '設定', href: '/settings' },
   ],

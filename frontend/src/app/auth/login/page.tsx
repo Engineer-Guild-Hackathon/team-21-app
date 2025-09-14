@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
-import { useAuth, UserRole } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -15,30 +15,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirect = searchParams?.get('redirect');
 
-  // デモ用のテストアカウント
-  const demoAccounts = [
-    {
-      role: 'student' as UserRole,
-      email: 'student@example.com',
-      password: 'password123',
-      name: '山田太郎',
-      description: '小学5年生',
-    },
-    {
-      role: 'parent' as UserRole,
-      email: 'parent@example.com',
-      password: 'password123',
-      name: '山田花子',
-      description: '太郎の母',
-    },
-    {
-      role: 'teacher' as UserRole,
-      email: 'teacher@example.com',
-      password: 'password123',
-      name: '佐藤先生',
-      description: '5年1組担任',
-    },
-  ];
+  // デモアカウントは削除済み
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,40 +26,17 @@ function LoginForm() {
       const loggedIn = await login(email, password);
       // redirect クエリがある場合は最優先
       if (redirect) {
-        router.push(redirect);
+        router.replace(redirect);
         return;
       }
       // ロール別に遷移
-      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
-        router.push('/dashboard');
+      if (loggedIn.role === 'teacher') {
+        router.replace('/teacher/dashboard');
       } else {
-        router.push('/learning');
+        router.replace('/learning');
       }
     } catch (err) {
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (account: (typeof demoAccounts)[0]) => {
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const loggedIn = await login(account.email, account.password);
-      // redirect クエリがある場合は最優先
-      if (redirect) {
-        router.push(redirect);
-        return;
-      }
-      if (loggedIn.role === 'parent' || loggedIn.role === 'teacher') {
-        router.push('/dashboard');
-      } else {
-        router.push('/learning');
-      }
-    } catch (err) {
-      setError('デモアカウントでのログインに失敗しました。');
     } finally {
       setIsLoading(false);
     }
@@ -105,41 +59,8 @@ function LoginForm() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* デモアカウント */}
-          <div className="space-y-4 mb-8">
-            <h3 className="text-lg font-medium text-gray-900">デモアカウント</h3>
-            <div className="grid gap-4">
-              {demoAccounts.map(account => (
-                <button
-                  key={account.role}
-                  onClick={() => handleDemoLogin(account)}
-                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">{account.name}</span>
-                    <span className="text-xs text-gray-500">{account.description}</span>
-                  </div>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {account.role === 'student' && '生徒'}
-                    {account.role === 'parent' && '保護者'}
-                    {account.role === 'teacher' && '教師'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">または</span>
-            </div>
-          </div>
-
           {/* ログインフォーム */}
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="rounded-md bg-red-50 p-4">
                 <div className="text-sm text-red-700">{error}</div>

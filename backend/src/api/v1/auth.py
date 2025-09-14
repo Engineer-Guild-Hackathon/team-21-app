@@ -57,11 +57,31 @@ async def register_user(
     # パスワードのハッシュ化
     hashed_password = get_password_hash(user_data.password)
 
+    # クラスIDの検証（生徒の場合）
+    class_id = None
+    if user_data.role == "student" and user_data.class_id:
+        # クラスIDが存在するかチェック
+        from src.domain.models.classroom import Class as ClassModel
+
+        result = await db.execute(
+            select(ClassModel).where(ClassModel.class_id == user_data.class_id)
+        )
+        class_obj = result.scalar_one_or_none()
+        if class_obj:
+            class_id = class_obj.id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="指定されたクラスIDが見つかりません",
+            )
+
     # ユーザーの作成
     db_user = User(
         email=user_data.email,
         hashed_password=hashed_password,
         full_name=user_data.full_name,
+        role=user_data.role,
+        class_id=class_id,
     )
     db.add(db_user)
     await db.commit()

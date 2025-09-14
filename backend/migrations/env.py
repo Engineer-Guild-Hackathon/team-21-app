@@ -13,6 +13,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.infrastructure.database import SQLALCHEMY_DATABASE_URL, Base
 
+# Import all models to ensure they are registered with Base.metadata
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

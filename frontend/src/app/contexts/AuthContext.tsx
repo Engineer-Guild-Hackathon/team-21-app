@@ -17,7 +17,13 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
-  register: (email: string, password: string, role: UserRole, name: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    role: UserRole,
+    name: string,
+    classId?: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<User> => {
     try {
       // APIリクエストを実装
-      const apiBase = 'https://api.34.107.156.246.nip.io';
+      const apiBase = 'http://localhost:8000';
       const response = await fetch(`${apiBase}/api/auth/token`, {
         method: 'POST',
         headers: {
@@ -58,6 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 注意: 本番ではHttpOnly/secure属性をサーバー側で設定すること
       const maxAge = 30 * 60; // 30分（サーバのトークン期限に整合）
       document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
+
+      // localStorageにもトークンを保存（API呼び出し用）
+      localStorage.setItem('token', access_token);
 
       // ユーザー情報を取得
       const userResponse = await fetch(`${apiBase}/api/users/me`, {
@@ -91,19 +100,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     // クッキーの削除（Max-Age=0）
     document.cookie = 'token=; Path=/; Max-Age=0';
   };
 
-  const register = async (email: string, password: string, role: UserRole, name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    role: UserRole,
+    name: string,
+    classId?: string
+  ) => {
     try {
       // APIリクエストを実装
-      const response = await fetch('/api/auth/register', {
+      const apiBase = 'http://localhost:8000';
+      const response = await fetch(`${apiBase}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, role, name }),
+        body: JSON.stringify({ email, password, full_name: name, role, class_id: classId }),
       });
 
       if (!response.ok) {
@@ -113,8 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       const newUser: User = {
         id: data.id,
-        name: data.name,
-        role: data.role,
+        name: data.full_name,
+        role: (data.role ?? 'student') as UserRole,
         email: data.email,
       };
 
