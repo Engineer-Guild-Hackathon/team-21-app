@@ -20,10 +20,6 @@ export default function DashboardPage() {
       router.replace('/learning');
       return;
     }
-    if (user.role === 'parent') {
-      // 保護者: 子どもの進捗ダッシュボード
-      // 実装が未整備の場合は共通UIを表示
-    }
     if (user.role === 'teacher') {
       // 教師: クラス管理/生徒分析へ誘導
     }
@@ -43,7 +39,7 @@ export default function DashboardPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {user.role === 'parent' && (
+          {false && (
             <Link
               href="/analysis"
               className="block rounded-lg border bg-white p-6 shadow hover:shadow-md transition"

@@ -28,12 +28,6 @@ const navigationByRole: Record<UserRole, Array<{ name: string; href: string; ico
     { name: 'フィードバック', href: '/feedback', icon: ChatBubbleLeftRightIcon },
     { name: '進捗', href: '/progress', icon: ChartBarIcon },
   ],
-  parent: [
-    { name: 'ホーム', href: '/', icon: HomeIcon },
-    { name: '子どもの進捗', href: '/dashboard', icon: ChartBarIcon },
-    { name: '行動分析', href: '/analysis', icon: ClipboardDocumentListIcon },
-    { name: 'アドバイス', href: '/advice', icon: ChatBubbleLeftRightIcon },
-  ],
   teacher: [
     { name: 'ホーム', href: '/teacher/dashboard', icon: HomeIcon },
     { name: 'クラス管理', href: '/teacher/classes', icon: UserGroupIcon },
@@ -46,11 +40,6 @@ const navigationByRole: Record<UserRole, Array<{ name: string; href: string; ico
 const menuItemsByRole: Record<UserRole, Array<{ name: string; href: string }>> = {
   student: [
     { name: 'プロフィール', href: '/profile' },
-    { name: '設定', href: '/settings' },
-  ],
-  parent: [
-    { name: '子ども管理', href: '/children' },
-    { name: '通知設定', href: '/notifications' },
     { name: '設定', href: '/settings' },
   ],
   teacher: [
@@ -127,7 +116,6 @@ export default function Navbar() {
                           {user.name}
                           <div className="text-xs text-gray-400">
                             {user.role === 'student' && '生徒'}
-                            {user.role === 'parent' && '保護者'}
                             {user.role === 'teacher' && '教師'}
                           </div>
                         </div>

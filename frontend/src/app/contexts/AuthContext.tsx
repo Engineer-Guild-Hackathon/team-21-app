@@ -2,7 +2,7 @@
 
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-export type UserRole = 'student' | 'parent' | 'teacher';
+export type UserRole = 'student' | 'teacher';
 
 export interface User {
   id: string;

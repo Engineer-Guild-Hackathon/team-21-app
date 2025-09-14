@@ -62,7 +62,7 @@ export default function AnalysisPage() {
       return;
     }
 
-    if (user.role !== 'parent' && user.role !== 'teacher') {
+    if (user.role !== 'teacher') {
       router.replace('/dashboard');
       return;
     }
@@ -166,9 +166,7 @@ export default function AnalysisPage() {
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                {user?.role === 'parent' ? '子どもの学習分析' : '生徒分析'}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900">生徒分析</h1>
               <p className="mt-2 text-gray-600">
                 {childProgress.name} ({childProgress.grade})
               </p>
