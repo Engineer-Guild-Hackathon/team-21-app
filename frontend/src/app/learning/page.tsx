@@ -98,15 +98,13 @@ export default function AIChatPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // 会話履歴をML分析APIに送信
-      const analysisData = {
-        messages: conversationMessages.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          role: msg.role,
-          timestamp: msg.timestamp.toISOString(),
-        })),
-      };
+      // 会話履歴をML分析APIに送信（バックエンドAPIの形式に合わせる）
+      const messagesData = conversationMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        role: msg.role,
+        timestamp: msg.timestamp.toISOString(),
+      }));
 
       const response = await fetch('http://localhost:8000/api/ml/analyze-conversation', {
         method: 'POST',
@@ -114,7 +112,7 @@ export default function AIChatPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(analysisData),
+        body: JSON.stringify(messagesData),
       });
 
       if (response.ok) {
