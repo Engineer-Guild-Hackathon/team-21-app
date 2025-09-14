@@ -1,9 +1,4 @@
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: '進捗 - 非認知能力学習プラットフォーム',
-  description: '学習進捗の確認と分析',
-};
+'use client';
 
 export default function ProgressPage() {
   return (

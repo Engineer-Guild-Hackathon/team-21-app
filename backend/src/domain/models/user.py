@@ -44,8 +44,38 @@ class User(Base):
         back_populates="student",
         cascade="all, delete-orphan",
     )
+    quest_progresses = relationship(
+        "QuestProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    # アバター・称号関連のリレーション
+    user_avatars = relationship(
+        "UserAvatar",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    user_avatar_parts = relationship(
+        "UserAvatarPart",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    user_titles = relationship(
+        "UserTitle",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    user_stats = relationship(
+        "UserStats",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 
 # リレーション解決のために明示的に読み込む（テスト時の単独import対策）
+from .avatar import UserAvatar, UserAvatarPart, UserStats, UserTitle  # noqa: E402,F401
 from .classroom import Class, LearningProgress  # noqa: E402,F401
 from .emotion import Emotion  # noqa: E402,F401
+from .quest import QuestProgress  # noqa: E402,F401

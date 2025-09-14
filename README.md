@@ -16,6 +16,36 @@
 - デモ URL: https://app.34.107.156.246.nip.io
 - プレゼン URL：
 
+## AI チャット機能（Gemini API）
+
+### 設定方法
+
+1. **Google AI Studio で API キーを取得**
+
+   - https://makersuite.google.com/app/apikey にアクセス
+   - Google アカウントでログイン
+   - 「Create API Key」をクリックして API キーを生成
+
+2. **環境変数の設定**
+
+   ```bash
+   # frontend/.env.local ファイルを作成
+   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+3. **機能の特徴**
+   - 学習に特化した AI アシスタント
+   - 数学・理科・国語・社会・英語の質問対応
+   - 宿題の手伝いと問題解決サポート
+   - 段階的な説明と具体例
+   - 非認知能力の向上サポート
+
+### 使用方法
+
+- ナビゲーションバーの「AI チャット」をクリック
+- 学習に関する質問を入力
+- AI が学習に特化した回答を生成
+
 ---
 
 # 🏆 NonCog - AI 駆動型非認知能力学習プラットフォーム

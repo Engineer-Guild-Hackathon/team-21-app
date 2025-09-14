@@ -1,9 +1,4 @@
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'フィードバック - 非認知能力学習プラットフォーム',
-  description: 'AIによる学習フィードバック',
-};
+'use client';
 
 export default function FeedbackPage() {
   return (
