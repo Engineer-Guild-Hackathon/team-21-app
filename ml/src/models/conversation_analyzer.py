@@ -108,12 +108,30 @@ class ConversationAnalyzer:
         # 特徴量を抽出
         features = self._extract_features(conversation_text, metrics)
 
-        # 各非認知能力スコアを予測
-        grit_score = self._predict_grit(features)
-        collaboration_score = self._predict_collaboration(features)
-        self_regulation_score = self._predict_self_regulation(features)
-        emotional_intelligence_score = self._predict_emotional_intelligence(features)
-        confidence_score = self._predict_confidence(features)
+        # 会話内容に基づく個別調整
+        content_adjustments = self._analyze_conversation_content(messages)
+
+        # 各非認知能力スコアを予測（内容調整を適用）
+        grit_score = self._predict_grit(features) + content_adjustments.get("grit", 0)
+        collaboration_score = self._predict_collaboration(
+            features
+        ) + content_adjustments.get("collaboration", 0)
+        self_regulation_score = self._predict_self_regulation(
+            features
+        ) + content_adjustments.get("self_regulation", 0)
+        emotional_intelligence_score = self._predict_emotional_intelligence(
+            features
+        ) + content_adjustments.get("emotional_intelligence", 0)
+        confidence_score = self._predict_confidence(features) + content_adjustments.get(
+            "confidence", 0
+        )
+
+        # スコアを0.0-5.0の範囲に制限
+        grit_score = max(0.0, min(5.0, grit_score))
+        collaboration_score = max(0.0, min(5.0, collaboration_score))
+        self_regulation_score = max(0.0, min(5.0, self_regulation_score))
+        emotional_intelligence_score = max(0.0, min(5.0, emotional_intelligence_score))
+        confidence_score = max(0.0, min(5.0, confidence_score))
 
         return NonCognitiveSkills(
             grit=grit_score,
@@ -293,62 +311,126 @@ class ConversationAnalyzer:
         skills: NonCognitiveSkills,
         previous_skills: Optional[NonCognitiveSkills] = None,
     ) -> str:
-        """非認知能力スコアに基づいてフィードバックを生成"""
+        """非認知能力スコアに基づいて個別化されたフィードバックを生成"""
+
+        import random
 
         feedback_parts = []
 
-        # 各スキルのフィードバック
-        if skills.grit >= 4.0:
-            feedback_parts.append(
-                "🌟 素晴らしいやり抜く力を持っています！困難な課題にも諦めずに取り組む姿勢が見られます。"
-            )
-        elif skills.grit >= 3.0:
-            feedback_parts.append(
-                "👍 やり抜く力が向上しています。目標を設定して継続的に取り組んでみましょう。"
-            )
-        else:
-            feedback_parts.append(
-                "💪 やり抜く力を鍛えるために、小さな目標から始めて達成感を積み重ねていきましょう。"
-            )
+        # より多様なフィードバックテンプレート
+        grit_feedbacks = {
+            "high": [
+                "🌟 素晴らしいやり抜く力！困難な課題にも諦めずに取り組む姿勢が印象的です。",
+                "💪 継続力が抜群ですね！目標に向かって一歩一歩進む姿勢が素晴らしいです。",
+                "🏆 粘り強さが際立っています！どんな困難も乗り越えられる力を持っていますね。",
+                "🎯 目標達成への意志が強く感じられます！この調子で頑張ってください。",
+            ],
+            "medium": [
+                "👍 やり抜く力が育っています！もう少し継続することで大きな成果が得られるでしょう。",
+                "📈 努力する姿勢が見えてきました！小さな成功を積み重ねていきましょう。",
+                "🔄 継続性が向上しています！習慣化することでさらに力を伸ばせます。",
+                "⚡ 集中力が高まってきています！この勢いで学習を続けてみてください。",
+            ],
+            "low": [
+                "💡 やり抜く力を育てるために、まずは小さな目標から始めてみましょう。",
+                "🎪 楽しく継続できる方法を見つけて、学習を習慣にしていきましょう。",
+                "🌱 成長の種をまいている段階です！焦らずに一つずつ取り組んでみてください。",
+                "🚀 スタートラインに立っています！小さな一歩から始めてみませんか？",
+            ],
+        }
 
-        if skills.collaboration >= 4.0:
-            feedback_parts.append(
-                "🤝 協調性がとても高いです！他者との協力を大切にしていますね。"
-            )
-        elif skills.collaboration >= 3.0:
-            feedback_parts.append(
-                "👥 協調性が育っています。グループ学習やペア学習を活用してみましょう。"
-            )
-        else:
-            feedback_parts.append(
-                "🤝 協調性を高めるために、友達と一緒に勉強したり、質問を積極的にしてみましょう。"
-            )
+        collaboration_feedbacks = {
+            "high": [
+                "🤝 協調性が素晴らしいです！他者との協力を大切にする姿勢が印象的です。",
+                "👥 チームワークの才能があります！みんなと一緒に学ぶ楽しさを感じていますね。",
+                "🤲 思いやりのある学習姿勢が素晴らしいです！周りの人も支えているでしょう。",
+                "🎭 コミュニケーション能力が高いですね！積極的に交流する姿勢が良いです。",
+            ],
+            "medium": [
+                "👂 協調性が育っています！相手の意見に耳を傾ける姿勢が見えてきました。",
+                "💬 コミュニケーションが向上しています！質問や相談を積極的にしてみましょう。",
+                "🤝 協力する姿勢が見えてきました！グループ学習でさらに力を伸ばせます。",
+                "👥 社交性が高まっています！友達と一緒に学習する機会を増やしてみましょう。",
+            ],
+            "low": [
+                "🗣️ 協調性を高めるために、まずは質問や相談を積極的にしてみましょう。",
+                "👥 グループ学習に参加して、他の人との交流を楽しんでみてください。",
+                "💭 自分の意見を伝える練習から始めて、協調性を育てていきましょう。",
+                "🤲 他者への思いやりを意識して、協力的な姿勢を身につけていきましょう。",
+            ],
+        }
 
-        if skills.self_regulation >= 4.0:
-            feedback_parts.append(
-                "🎯 自己制御力が優れています！計画的に学習を進められています。"
-            )
-        elif skills.self_regulation >= 3.0:
-            feedback_parts.append(
-                "📝 自己制御力が向上しています。学習計画を立てて実行してみましょう。"
-            )
-        else:
-            feedback_parts.append(
-                "⏰ 自己制御力を高めるために、学習時間を決めて集中して取り組んでみましょう。"
-            )
+        self_regulation_feedbacks = {
+            "high": [
+                "🎯 自己管理能力が優れています！計画的に学習を進められていますね。",
+                "⏰ 時間管理が素晴らしいです！効率的な学習スタイルが身についています。",
+                "📋 計画性が抜群ですね！目標に向かって着実に進んでいます。",
+                "🧠 集中力と自制心が高いです！学習に取り組む姿勢が素晴らしいです。",
+            ],
+            "medium": [
+                "📝 自己管理力が向上しています！学習計画を立てて実行してみましょう。",
+                "⏱️ 時間の使い方が改善されてきました！さらに効率化を図ってみてください。",
+                "📊 計画性が育っています！目標設定を明確にして取り組んでみましょう。",
+                "🎪 集中力が高まってきています！学習環境を整えてさらに力を伸ばしましょう。",
+            ],
+            "low": [
+                "📅 自己管理力を高めるために、まずは学習時間を決めて取り組んでみましょう。",
+                "🎯 目標設定から始めて、計画的に学習を進めていきましょう。",
+                "⏰ 時間管理の練習をして、効率的な学習スタイルを身につけましょう。",
+                "🧘 集中力を高めるために、学習環境を整えて取り組んでみましょう。",
+            ],
+        }
 
-        if skills.emotional_intelligence >= 4.0:
-            feedback_parts.append(
-                "💝 感情知能が高いです！自分の感情を理解し、適切に表現できています。"
+        emotional_intelligence_feedbacks = {
+            "high": [
+                "💝 感情知能が高いです！自分の感情を理解し、適切に表現できています。",
+                "😊 感情のコントロールが素晴らしいです！安定した学習姿勢が印象的です。",
+                "🌈 感情の豊かさと表現力が優れています！学習にも良い影響を与えていますね。",
+                "🤗 共感力が高く、他者との関係性も良好ですね！学習環境も良くなっているでしょう。",
+            ],
+            "medium": [
+                "😌 感情知能が育っています！感情を言葉で表現する練習をしてみましょう。",
+                "🧘 感情の安定性が向上しています！ストレス管理も意識してみてください。",
+                "💭 自己理解が深まってきました！感情を振り返る時間を作ってみましょう。",
+                "🎭 感情表現が豊かになってきました！学習へのモチベーションも高まっているでしょう。",
+            ],
+            "low": [
+                "💭 感情知能を高めるために、自分の気持ちを振り返る時間を作ってみましょう。",
+                "😊 ポジティブな感情を意識して、学習へのモチベーションを高めていきましょう。",
+                "🧠 感情と思考のバランスを取って、安定した学習姿勢を身につけましょう。",
+                "🌈 感情の表現力を高めて、学習への意欲を育てていきましょう。",
+            ],
+        }
+
+        # スキルレベルに応じてフィードバックを選択
+        def get_feedback_level(score):
+            if score >= 4.0:
+                return "high"
+            elif score >= 3.0:
+                return "medium"
+            else:
+                return "low"
+
+        # 各スキルのフィードバックを生成（ランダム選択）
+        grit_level = get_feedback_level(skills.grit)
+        feedback_parts.append(random.choice(grit_feedbacks[grit_level]))
+
+        collaboration_level = get_feedback_level(skills.collaboration)
+        feedback_parts.append(
+            random.choice(collaboration_feedbacks[collaboration_level])
+        )
+
+        self_regulation_level = get_feedback_level(skills.self_regulation)
+        feedback_parts.append(
+            random.choice(self_regulation_feedbacks[self_regulation_level])
+        )
+
+        emotional_intelligence_level = get_feedback_level(skills.emotional_intelligence)
+        feedback_parts.append(
+            random.choice(
+                emotional_intelligence_feedbacks[emotional_intelligence_level]
             )
-        elif skills.emotional_intelligence >= 3.0:
-            feedback_parts.append(
-                "😊 感情知能が育っています。感情を言葉で表現する練習をしてみましょう。"
-            )
-        else:
-            feedback_parts.append(
-                "💭 感情知能を高めるために、自分の気持ちを振り返る時間を作ってみましょう。"
-            )
+        )
 
         # 進歩の評価
         if previous_skills:
@@ -371,3 +453,93 @@ class ConversationAnalyzer:
                 )
 
         return "\n\n".join(feedback_parts)
+
+    def _analyze_conversation_content(self, messages: List[Dict]) -> Dict[str, float]:
+        """会話内容に基づいてスキル調整値を計算"""
+
+        user_messages = [msg for msg in messages if msg.get("role") == "user"]
+        all_text = " ".join(msg.get("content", "") for msg in user_messages).lower()
+
+        adjustments = {
+            "grit": 0.0,
+            "collaboration": 0.0,
+            "self_regulation": 0.0,
+            "emotional_intelligence": 0.0,
+            "confidence": 0.0,
+        }
+
+        # グリット関連のキーワード
+        grit_positive = [
+            "頑張る",
+            "続ける",
+            "挑戦",
+            "努力",
+            "目標",
+            "達成",
+            "やり抜く",
+            "諦めない",
+        ]
+        grit_negative = ["諦める", "やめる", "面倒", "疲れた", "無理"]
+
+        grit_score = sum(1 for word in grit_positive if word in all_text) * 0.1
+        grit_score -= sum(1 for word in grit_negative if word in all_text) * 0.05
+        adjustments["grit"] = grit_score
+
+        # 協調性関連のキーワード
+        collaboration_positive = [
+            "一緒",
+            "協力",
+            "助ける",
+            "質問",
+            "相談",
+            "教える",
+            "グループ",
+            "チーム",
+        ]
+        collaboration_negative = ["一人", "独り", "自分だけ", "他人", "邪魔"]
+
+        collab_score = (
+            sum(1 for word in collaboration_positive if word in all_text) * 0.1
+        )
+        collab_score -= (
+            sum(1 for word in collaboration_negative if word in all_text) * 0.05
+        )
+        adjustments["collaboration"] = collab_score
+
+        # 自己制御関連のキーワード
+        regulation_positive = ["計画", "時間", "集中", "計画的", "整理", "管理", "習慣"]
+        regulation_negative = ["だらだら", "散漫", "集中できない", "計画なし"]
+
+        reg_score = sum(1 for word in regulation_positive if word in all_text) * 0.1
+        reg_score -= sum(1 for word in regulation_negative if word in all_text) * 0.05
+        adjustments["self_regulation"] = reg_score
+
+        # 感情知能関連のキーワード
+        emotion_positive = [
+            "嬉しい",
+            "楽しい",
+            "感情",
+            "気持ち",
+            "理解",
+            "共感",
+            "感謝",
+        ]
+        emotion_negative = ["怒る", "イライラ", "悲しい", "不安", "ストレス"]
+
+        emotion_score = sum(1 for word in emotion_positive if word in all_text) * 0.1
+        emotion_score -= sum(1 for word in emotion_negative if word in all_text) * 0.03
+        adjustments["emotional_intelligence"] = emotion_score
+
+        # 自信関連のキーワード
+        confidence_positive = ["できる", "大丈夫", "自信", "成功", "得意", "好き"]
+        confidence_negative = ["できない", "無理", "自信ない", "苦手", "嫌い"]
+
+        conf_score = sum(1 for word in confidence_positive if word in all_text) * 0.1
+        conf_score -= sum(1 for word in confidence_negative if word in all_text) * 0.05
+        adjustments["confidence"] = conf_score
+
+        # 調整値を-0.5から+0.5の範囲に制限
+        for key in adjustments:
+            adjustments[key] = max(-0.5, min(0.5, adjustments[key]))
+
+        return adjustments
