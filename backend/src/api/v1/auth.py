@@ -10,6 +10,7 @@ from src.core.security import (
     get_current_active_user,
     get_password_hash,
 )
+from src.domain.models.avatar import Avatar, UserAvatar, UserStats
 from src.domain.models.user import User
 from src.domain.schemas.auth import Token, UserCreate, UserResponse
 from src.infrastructure.database import get_db
@@ -17,6 +18,38 @@ from src.infrastructure.database import get_db
 router = APIRouter()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+async def create_default_user_setup(user_id: int, db: AsyncSession):
+    """新規ユーザーにデフォルトアバターと統計情報を作成"""
+    from sqlalchemy import select
+
+    # 1. デフォルト統計情報を作成
+    user_stats = UserStats(
+        user_id=user_id,
+        grit_level=1.0,
+        collaboration_level=1.0,
+        self_regulation_level=1.0,
+        emotional_intelligence_level=1.0,
+    )
+    db.add(user_stats)
+
+    # 2. デフォルトアバターを取得して設定
+    default_avatar_stmt = (
+        select(Avatar).where(Avatar.name == "デフォルトアバター").limit(1)
+    )
+    default_avatar_result = await db.execute(default_avatar_stmt)
+    default_avatar = default_avatar_result.scalar_one_or_none()
+
+    if default_avatar:
+        user_avatar = UserAvatar(
+            user_id=user_id,
+            avatar_id=default_avatar.id,
+            is_current=True,
+        )
+        db.add(user_avatar)
+
+    await db.commit()
 
 
 @router.post("/token", response_model=Token)
@@ -85,6 +118,9 @@ async def register_user(
     db.add(db_user)
     await db.commit()
     await db.refresh(db_user)
+
+    # 新規ユーザーにデフォルトアバターと統計情報を作成
+    await create_default_user_setup(db_user.id, db)
 
     return db_user
 

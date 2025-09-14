@@ -41,6 +41,32 @@ from ...infrastructure.database import get_db
 router = APIRouter()
 
 
+async def update_user_stats_on_quest_completion(user_id: int, quest, db: AsyncSession):
+    """クエスト完了時にユーザー統計を更新"""
+    # ユーザー統計を取得または作成
+    stats_stmt = select(UserStats).where(UserStats.user_id == user_id)
+    stats_result = await db.execute(stats_stmt)
+    stats = stats_result.scalar_one_or_none()
+
+    if not stats:
+        stats = UserStats(user_id=user_id)
+        db.add(stats)
+
+    # 完了クエスト数を増加
+    stats.total_quests_completed += 1
+
+    # 日次クエストの場合
+    if quest.is_daily:
+        stats.daily_quests_completed += 1
+        # 連続日数を更新（簡易実装）
+        stats.current_streak_days += 1
+        stats.max_streak_days = max(stats.max_streak_days, stats.current_streak_days)
+
+    # 学習時間を増加（推定）
+    stats.total_learning_time_minutes += quest.estimated_duration
+    stats.total_sessions += 1
+
+
 @router.get("/", response_model=QuestListResponse)
 async def get_quests(
     page: int = Query(1, ge=1, description="ページ番号"),
@@ -253,6 +279,9 @@ async def update_quest_progress(
                     reward_data={"badge_id": quest.badge_id},
                 )
                 db.add(badge_reward)
+
+            # 統計情報を更新
+            await update_user_stats_on_quest_completion(current_user.id, quest, db)
 
     await db.commit()
     await db.refresh(progress)

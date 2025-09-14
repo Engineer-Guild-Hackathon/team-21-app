@@ -450,7 +450,7 @@ def generate_feedback_from_skills(skills: Dict[str, float]) -> str:
     feedbacks = []
 
     # 全てのスキルが初期値（1.0）の場合、新規ユーザー向けメッセージ
-    if all(value == 1.0 for value in skills.values() if key != "confidence"):
+    if all(value == 1.0 for key, value in skills.items() if key != "confidence"):
         return "🎯 学習を始めましょう！AIチャットで質問したり、クエストに挑戦したりして、スキルを向上させていきましょう。"
 
     if skills.get("grit", 0) >= 4.0:
