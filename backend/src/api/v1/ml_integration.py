@@ -8,7 +8,7 @@ from typing import Dict, List, Optional
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.security import get_current_active_user
