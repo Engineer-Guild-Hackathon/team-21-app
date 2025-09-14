@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1 import (
     auth,
+    avatars,
     classes,
     emotion_analysis,
     emotions,
@@ -118,6 +119,7 @@ app.include_router(emotions.router, prefix="/api/emotions", tags=["感情"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["フィードバック"])
 app.include_router(learning.router, prefix="/api/learning", tags=["学習"])
 app.include_router(quests.router, prefix="/api/quests", tags=["クエスト"])
+app.include_router(avatars.router, prefix="/api/avatars", tags=["アバター・称号"])
 
 
 @app.get("/")
