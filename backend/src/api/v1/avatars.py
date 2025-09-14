@@ -121,9 +121,7 @@ async def get_user_profile(
     current_avatar_stmt = (
         select(UserAvatar)
         .options(selectinload(UserAvatar.avatar))
-        .where(
-            and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current)
-        )
+        .where(and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current))
     )
     current_avatar_result = await db.execute(current_avatar_stmt)
     current_avatar = current_avatar_result.scalar_one_or_none()
