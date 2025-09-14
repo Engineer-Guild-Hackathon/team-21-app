@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.security import (
     authenticate_user,
     create_access_token,
@@ -34,7 +33,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        subject=user.email, expires_delta=access_token_expires
+        subject=user.id, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
