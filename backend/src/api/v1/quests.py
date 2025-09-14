@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ...core.security import get_current_user
+from ...domain.models.avatar import UserStats
 from ...domain.models.quest import (
     Quest,
     QuestProgress,
@@ -82,7 +83,7 @@ async def get_quests(
     """利用可能なクエスト一覧を取得"""
 
     # クエリ構築
-    stmt = select(Quest).where(Quest.is_active == True)
+    stmt = select(Quest).where(Quest.is_active)
 
     # フィルタ適用
     if quest_type:
@@ -150,7 +151,7 @@ async def get_recommended_quests(
     recommended_stmt = (
         select(Quest)
         .where(
-            Quest.is_active == True,
+            Quest.is_active,
             Quest.quest_type.in_(recommended_types),
             Quest.required_level <= 1,  # 仮のレベル制限
         )
@@ -337,9 +338,7 @@ async def get_quest_stats(
     """クエスト統計情報を取得"""
 
     # 基本的な統計
-    total_quests = await db.scalar(
-        select(func.count(Quest.id)).where(Quest.is_active == True)
-    )
+    total_quests = await db.scalar(select(func.count(Quest.id)).where(Quest.is_active))
 
     completed_count = await db.scalar(
         select(func.count(QuestProgress.id)).where(
@@ -366,7 +365,7 @@ async def get_quest_stats(
                 and_(
                     QuestReward.user_id == current_user.id,
                     QuestReward.reward_type == "experience",
-                    QuestReward.is_claimed == True,
+                    QuestReward.is_claimed,
                 )
             )
         )
@@ -379,7 +378,7 @@ async def get_quest_stats(
                 and_(
                     QuestReward.user_id == current_user.id,
                     QuestReward.reward_type == "coins",
-                    QuestReward.is_claimed == True,
+                    QuestReward.is_claimed,
                 )
             )
         )
