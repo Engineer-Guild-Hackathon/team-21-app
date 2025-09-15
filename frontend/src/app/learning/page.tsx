@@ -1,6 +1,6 @@
 'use client';
 
-import { apiUrl } from "@/lib/api";
+import { apiUrl } from '@/lib/api';
 
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
@@ -161,20 +161,17 @@ export default function AIChatPage() {
       const token = localStorage.getItem('token');
       if (!token || !currentSessionId) return;
 
-      const response = await fetch(
-        `${apiUrl("")}/api/chat/sessions/${currentSessionId}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            content: content,
-            role: role,
-          }),
-        }
-      );
+      const response = await fetch(`${apiUrl('')}/api/chat/sessions/${currentSessionId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          content: content,
+          role: role,
+        }),
+      });
 
       if (!response.ok) {
         console.error('メッセージ保存エラー:', response.status);
