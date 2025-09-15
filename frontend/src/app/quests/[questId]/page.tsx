@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, CheckCircle, Clock, Save, Star, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Lightbulb, Save, Star, Trophy, Users } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -34,6 +34,7 @@ interface QuestProgress {
   quest_data: any;
   started_date: string;
   completed_date?: string;
+  quest: Quest; // APIはQuestProgressWithQuestを返すため
 }
 
 export default function QuestDetailPage() {
@@ -47,6 +48,8 @@ export default function QuestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [questData, setQuestData] = useState<any>({});
+  const [isComposing, setIsComposing] = useState(false);
+  const setQuestDataLocal = (data: any) => setQuestData((prev: any) => ({ ...prev, ...data }));
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -165,6 +168,34 @@ export default function QuestDetailPage() {
   const renderQuestContent = () => {
     if (!quest) return null;
 
+    // クエストテンプレート優先（新規行動型クエスト）
+    const template = quest.quest_config?.template as
+      | 'helping_report'
+      | 'achievement_diary'
+      | 'ask_for_help'
+      | 'streak_habit'
+      | 'mini_teacher'
+      | 'respect_different_opinion'
+      | undefined;
+
+    switch (template) {
+      case 'helping_report':
+        return renderHelpingReport();
+      case 'achievement_diary':
+        return renderAchievementDiary();
+      case 'ask_for_help':
+        return renderAskForHelp();
+      case 'streak_habit':
+        return renderStreakHabit();
+      case 'mini_teacher':
+        return renderMiniTeacher();
+      case 'respect_different_opinion':
+        return renderRespectDifferentOpinion();
+      default:
+        break;
+    }
+
+    // 既存タイプのレンダリング
     switch (quest.quest_type) {
       case 'daily_log':
         return renderDailyLogQuest();
@@ -177,6 +208,453 @@ export default function QuestDetailPage() {
       default:
         return <div>このクエストタイプはまだ実装されていません。</div>;
     }
+  };
+
+  const renderHelpingReport = () => {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-blue-500" />
+              <span>小さな助け合いレポート</span>
+            </CardTitle>
+            <CardDescription>手助けした内容と相手の反応を記録しましょう</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="help_content">どんな手助けをしましたか？</Label>
+              <Textarea
+                id="help_content"
+                placeholder="例: 落とした教科書を拾って渡した"
+                value={questData.help_content || ''}
+                onChange={e => setQuestDataLocal({ help_content: e.target.value })}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="help_target">手助けした相手</Label>
+              <Input
+                id="help_target"
+                placeholder="例: 友だち / 家族 / 先生"
+                value={questData.help_target || ''}
+                onChange={e => setQuestDataLocal({ help_target: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="reaction">相手の反応</Label>
+              <select
+                id="reaction"
+                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
+                value={questData.reaction || ''}
+                onChange={e => setQuestDataLocal({ reaction: e.target.value })}
+              >
+                <option value="">選択してください</option>
+                <option value="smile">笑顔だった</option>
+                <option value="thanks">ありがとうと言ってくれた</option>
+                <option value="surprised">驚いていた</option>
+                <option value="other">その他</option>
+              </select>
+            </div>
+
+            <div className="flex justify-between items-center pt-4">
+              <div className="text-sm text-gray-600">
+                記録した項目:{' '}
+                {
+                  [questData.help_content, questData.help_target, questData.reaction].filter(
+                    v => v && String(v).trim()
+                  ).length
+                }{' '}
+                / 3
+              </div>
+              <Button
+                onClick={() => {
+                  const filled = [
+                    questData.help_content,
+                    questData.help_target,
+                    questData.reaction,
+                  ].filter(v => v && String(v).trim()).length;
+                  updateProgress({}, (filled / 3) * 100);
+                }}
+                disabled={saving}
+                variant="outline"
+                size="sm"
+              >
+                {saving ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderAchievementDiary = () => {
+    const items: Array<{ key: string; label: string; placeholder: string }> = [
+      { key: 'achieved_1', label: 'できたこと 1', placeholder: '例: 音読を最後までできた' },
+      { key: 'achieved_2', label: 'できたこと 2', placeholder: '例: 片付けを自分からやった' },
+      { key: 'achieved_3', label: 'できたこと 3', placeholder: '例: 新しい漢字を3つ覚えた' },
+    ];
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Star className="w-5 h-5 text-yellow-500" />
+              <span>できたこと日記</span>
+            </CardTitle>
+            <CardDescription>今日のできたことを3つ書き、難易度を星で評価しましょう</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {items.map((it, idx) => (
+              <div key={it.key} className="space-y-2">
+                <Label htmlFor={it.key}>{it.label}</Label>
+                <Input
+                  id={it.key}
+                  placeholder={it.placeholder}
+                  value={questData[it.key] || ''}
+                  onChange={e => setQuestDataLocal({ [it.key]: e.target.value })}
+                  className="mt-1"
+                />
+                <div className="flex items-center space-x-2">
+                  <Label>むずかしさ</Label>
+                  <select
+                    className="block rounded-md border px-2 py-1 text-sm"
+                    value={questData[`difficulty_${idx + 1}`] || ''}
+                    onChange={e => setQuestDataLocal({ [`difficulty_${idx + 1}`]: e.target.value })}
+                  >
+                    <option value="">選択</option>
+                    <option value="1">★☆☆☆☆</option>
+                    <option value="2">★★☆☆☆</option>
+                    <option value="3">★★★☆☆</option>
+                    <option value="4">★★★★☆</option>
+                    <option value="5">★★★★★</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+
+            <div className="flex justify-between items-center pt-2">
+              <div className="text-sm text-gray-600">
+                入力済み: {items.filter(it => questData[it.key] && questData[it.key].trim()).length}{' '}
+                / 3
+              </div>
+              <Button
+                onClick={() => {
+                  const count = items.filter(
+                    it => questData[it.key] && questData[it.key].trim()
+                  ).length;
+                  updateProgress({}, (count / 3) * 100);
+                }}
+                disabled={saving}
+                variant="outline"
+                size="sm"
+              >
+                {saving ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderAskForHelp = () => {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="w-5 h-5 text-indigo-500" />
+              <span>困ったら聞こうチャレンジ</span>
+            </CardTitle>
+            <CardDescription>質問文を作り、相手に丁寧に聞いてみましょう</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="question_text">質問文</Label>
+              <Textarea
+                id="question_text"
+                placeholder="例: この問題の考え方を教えてください"
+                value={questData.question_text || ''}
+                onChange={e => setQuestDataLocal({ question_text: e.target.value })}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="question_target">誰に聞きましたか？</Label>
+              <Input
+                id="question_target"
+                placeholder="例: 先生 / 友だち / 家族"
+                value={questData.question_target || ''}
+                onChange={e => setQuestDataLocal({ question_target: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="question_result">結果</Label>
+              <select
+                id="question_result"
+                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
+                value={questData.question_result || ''}
+                onChange={e => setQuestDataLocal({ question_result: e.target.value })}
+              >
+                <option value="">選択してください</option>
+                <option value="solved">解決した</option>
+                <option value="hint">ヒントをもらえた</option>
+                <option value="try_again">後でもう一度聞く</option>
+              </select>
+            </div>
+
+            <div className="flex justify-between items-center pt-4">
+              <div className="text-sm text-gray-600">
+                記録した項目:{' '}
+                {
+                  [
+                    questData.question_text,
+                    questData.question_target,
+                    questData.question_result,
+                  ].filter(v => v && String(v).trim()).length
+                }{' '}
+                / 3
+              </div>
+              <Button
+                onClick={() => {
+                  const filled = [
+                    questData.question_text,
+                    questData.question_target,
+                    questData.question_result,
+                  ].filter(v => v && String(v).trim()).length;
+                  updateProgress({}, (filled / 3) * 100);
+                }}
+                disabled={saving}
+                variant="outline"
+                size="sm"
+              >
+                {saving ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderStreakHabit = () => {
+    const habitName = questData.habit_name || '';
+    const day1 = !!questData.day1;
+    const day2 = !!questData.day2;
+    const day3 = !!questData.day3;
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-emerald-600" />
+              <span>途中でやめないリレー（3日連続）</span>
+            </CardTitle>
+            <CardDescription>短い習慣を3日連続で続けましょう</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="habit_name">続けたい短い習慣</Label>
+              <Input
+                id="habit_name"
+                placeholder="例: 3分片付け / 音読1ページ"
+                value={habitName}
+                onChange={e => setQuestDataLocal({ habit_name: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3].map(d => (
+                <label key={d} className="flex items-center space-x-2 p-3 border rounded">
+                  <input
+                    type="checkbox"
+                    checked={!!questData[`day${d}`]}
+                    onChange={e => setQuestDataLocal({ [`day${d}`]: e.target.checked })}
+                  />
+                  <span>Day {d}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <div className="text-sm text-gray-600">
+                連続達成: {[day1, day2, day3].filter(Boolean).length} / 3 日
+              </div>
+              <Button
+                onClick={() => {
+                  const cnt = [day1, day2, day3].filter(Boolean).length;
+                  updateProgress({}, (cnt / 3) * 100);
+                }}
+                disabled={saving}
+                variant="outline"
+                size="sm"
+              >
+                {saving ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderMiniTeacher = () => {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-teal-600" />
+              <span>ミニ先生</span>
+            </CardTitle>
+            <CardDescription>説明→質問→確認の3ステップを記録しましょう</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="teach_topic">教えたこと</Label>
+              <Input
+                id="teach_topic"
+                placeholder="例: 分数の足し算のやり方"
+                value={questData.teach_topic || ''}
+                onChange={e => setQuestDataLocal({ teach_topic: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="teach_question">相手にした質問</Label>
+              <Input
+                id="teach_question"
+                placeholder="例: どこがむずかしかった？"
+                value={questData.teach_question || ''}
+                onChange={e => setQuestDataLocal({ teach_question: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="teach_check">理解の確認</Label>
+              <select
+                id="teach_check"
+                className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
+                value={questData.teach_check || ''}
+                onChange={e => setQuestDataLocal({ teach_check: e.target.value })}
+              >
+                <option value="">選択してください</option>
+                <option value="understood">わかったみたい</option>
+                <option value="need_more">もう少し説明が必要</option>
+              </select>
+            </div>
+
+            <div className="flex justify-between items-center pt-4">
+              <div className="text-sm text-gray-600">
+                記録した項目:{' '}
+                {
+                  [questData.teach_topic, questData.teach_question, questData.teach_check].filter(
+                    v => v && String(v).trim()
+                  ).length
+                }{' '}
+                / 3
+              </div>
+              <Button
+                onClick={() => {
+                  const filled = [
+                    questData.teach_topic,
+                    questData.teach_question,
+                    questData.teach_check,
+                  ].filter(v => v && String(v).trim()).length;
+                  updateProgress({}, (filled / 3) * 100);
+                }}
+                disabled={saving}
+                variant="outline"
+                size="sm"
+              >
+                {saving ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderRespectDifferentOpinion = () => {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Lightbulb className="w-5 h-5 text-orange-500" />
+              <span>みんな違ってみんないい</span>
+            </CardTitle>
+            <CardDescription>自分と違う意見の良いところを見つけて書きましょう</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="other_opinion">相手の意見</Label>
+              <Textarea
+                id="other_opinion"
+                placeholder="相手の意見を簡単に書きましょう"
+                value={questData.other_opinion || ''}
+                onChange={e => setQuestDataLocal({ other_opinion: e.target.value })}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>良いところを2つ</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+                <Input
+                  placeholder="良いところ 1"
+                  value={questData.good_point_1 || ''}
+                  onChange={e => setQuestDataLocal({ good_point_1: e.target.value })}
+                />
+                <Input
+                  placeholder="良いところ 2"
+                  value={questData.good_point_2 || ''}
+                  onChange={e => setQuestDataLocal({ good_point_2: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-4">
+              <div className="text-sm text-gray-600">
+                入力済み:{' '}
+                {
+                  [questData.other_opinion, questData.good_point_1, questData.good_point_2].filter(
+                    v => v && String(v).trim()
+                  ).length
+                }{' '}
+                / 3
+              </div>
+              <Button
+                onClick={() => {
+                  const count = [
+                    questData.other_opinion,
+                    questData.good_point_1,
+                    questData.good_point_2,
+                  ].filter(v => v && String(v).trim()).length;
+                  updateProgress({}, (count / 3) * 100);
+                }}
+                disabled={saving}
+                variant="outline"
+                size="sm"
+              >
+                {saving ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   const renderDailyLogQuest = () => {
@@ -199,7 +677,7 @@ export default function QuestDetailPage() {
                 id="achievement"
                 placeholder="例: 難しい算数の問題を最後まで解いた"
                 value={questData.achievement || ''}
-                onChange={e => updateProgress({ achievement: e.target.value })}
+                onChange={e => setQuestDataLocal({ achievement: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -211,7 +689,7 @@ export default function QuestDetailPage() {
                 id="feeling"
                 placeholder="例: 最初は難しかったけど、最後まで頑張れて嬉しかった"
                 value={questData.feeling || ''}
-                onChange={e => updateProgress({ feeling: e.target.value })}
+                onChange={e => setQuestDataLocal({ feeling: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -223,7 +701,7 @@ export default function QuestDetailPage() {
                 id="gratitude"
                 placeholder="例: 先生が優しく教えてくれたこと"
                 value={questData.gratitude || ''}
-                onChange={e => updateProgress({ gratitude: e.target.value })}
+                onChange={e => setQuestDataLocal({ gratitude: e.target.value })}
                 className="mt-1"
                 rows={2}
               />
@@ -409,7 +887,7 @@ export default function QuestDetailPage() {
                 id="prompt"
                 placeholder="例: 魔法の森で出会った不思議な友達"
                 value={questData.prompt || ''}
-                onChange={e => updateProgress({ prompt: e.target.value })}
+                onChange={e => setQuestDataLocal({ prompt: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -420,7 +898,7 @@ export default function QuestDetailPage() {
                 id="story"
                 placeholder="お話を書いてみましょう..."
                 value={questData.story || ''}
-                onChange={e => updateProgress({ story: e.target.value })}
+                onChange={e => setQuestDataLocal({ story: e.target.value })}
                 className="mt-1"
                 rows={8}
               />
@@ -432,7 +910,7 @@ export default function QuestDetailPage() {
                 id="characters"
                 placeholder="例: 主人公の少年、魔法の森の妖精"
                 value={questData.characters || ''}
-                onChange={e => updateProgress({ characters: e.target.value })}
+                onChange={e => setQuestDataLocal({ characters: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -508,11 +986,16 @@ export default function QuestDetailPage() {
                 <Input
                   id="newHint"
                   placeholder="ヒントを入力..."
-                  onKeyPress={e => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      const newHints = [...(questData.hints || []), e.currentTarget.value.trim()];
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
+                  onChange={e => setQuestDataLocal({ pendingHint: e.target.value })}
+                  onKeyDown={e => {
+                    if (isComposing) return;
+                    const value = (questData.pendingHint || '').trim();
+                    if (e.key === 'Enter' && value) {
+                      const newHints = [...(questData.hints || []), value];
+                      setQuestDataLocal({ hints: newHints, pendingHint: '' });
                       updateProgress({ hints: newHints });
-                      e.currentTarget.value = '';
                     }
                   }}
                 />
