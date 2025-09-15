@@ -8,7 +8,6 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_API_BASE_URL=${_API_BASE_URL}'
       - '.'
-    dir: 'frontend'
 
 substitutions:
   _REGISTRY: 'asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg'
