@@ -40,7 +40,7 @@ export const useSSE = ({ userId, onMessage, onError, onOpen, onClose }: UseSSEOp
   useEffect(() => {
     if (!userId) return;
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE || '${apiUrl("")}';
     const url = `${API_BASE}/api/learning/stream/${userId}`;
 
     console.log('SSE: Connecting to', url);

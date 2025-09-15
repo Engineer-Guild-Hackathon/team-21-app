@@ -1,5 +1,7 @@
 'use client';
 
+import { apiUrl } from "@/lib/api";
+
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -66,7 +68,7 @@ export default function AIChatPage() {
       if (!token) return;
 
       // 新しいチャットセッションを作成
-      const response = await fetch('http://localhost:8000/api/chat/sessions', {
+      const response = await fetch('${apiUrl("")}/api/chat/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +162,7 @@ export default function AIChatPage() {
       if (!token || !currentSessionId) return;
 
       const response = await fetch(
-        `http://localhost:8000/api/chat/sessions/${currentSessionId}/messages`,
+        `${apiUrl("")}/api/chat/sessions/${currentSessionId}/messages`,
         {
           method: 'POST',
           headers: {
@@ -195,7 +197,7 @@ export default function AIChatPage() {
         timestamp: msg.timestamp.toISOString(),
       }));
 
-      const response = await fetch('http://localhost:8000/api/ml/analyze-conversation', {
+      const response = await fetch('${apiUrl("")}/api/ml/analyze-conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,7 +229,7 @@ export default function AIChatPage() {
       setIsAutoAnalyzing(true);
       console.log('自動ML分析を実行中...');
 
-      const response = await fetch('http://localhost:8000/api/ml/analyze-from-database', {
+      const response = await fetch('${apiUrl("")}/api/ml/analyze-from-database', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
