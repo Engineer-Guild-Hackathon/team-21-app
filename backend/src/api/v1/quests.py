@@ -38,6 +38,7 @@ from ...domain.schemas.quest import (
     QuestStatsResponse,
 )
 from ...infrastructure.database import get_db
+from .avatars import check_and_unlock_achievements
 
 router = APIRouter()
 
@@ -261,6 +262,9 @@ async def update_quest_progress(
                 reward_value=quest.experience_points,
             )
             db.add(reward)
+            # クエスト完了時に即時反映させるため自動受取
+            reward.is_claimed = True
+            reward.claimed_at = datetime.utcnow()
 
             if quest.coins > 0:
                 coin_reward = QuestReward(
@@ -270,6 +274,8 @@ async def update_quest_progress(
                     reward_value=quest.coins,
                 )
                 db.add(coin_reward)
+                coin_reward.is_claimed = True
+                coin_reward.claimed_at = datetime.utcnow()
 
             if quest.badge_id:
                 badge_reward = QuestReward(
@@ -283,6 +289,9 @@ async def update_quest_progress(
 
             # 統計情報を更新
             await update_user_stats_on_quest_completion(current_user.id, quest, db)
+
+            # クエスト完了に伴う称号の解除チェック（初クエストなどを即時付与）
+            await check_and_unlock_achievements(current_user.id, db)
 
     await db.commit()
     await db.refresh(progress)
