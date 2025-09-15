@@ -1,3 +1,4 @@
+import { apiUrl } from '@/lib/api';
 'use client';
 
 import { useAuth } from '@/app/contexts/AuthContext';
@@ -110,7 +111,7 @@ export default function AvatarsPage() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/avatars/profile', {
+      const response = await fetch(apiUrl('/api/avatars/profile'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -132,7 +133,7 @@ export default function AvatarsPage() {
   const changeAvatar = async (avatarId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/avatars/avatar/change', {
+      const response = await fetch(apiUrl('/api/avatars/avatar/change'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ export default function AvatarsPage() {
   const changeTitle = async (titleId: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/avatars/title/change', {
+      const response = await fetch(apiUrl('/api/avatars/title/change'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

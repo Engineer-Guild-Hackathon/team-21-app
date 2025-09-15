@@ -1,4 +1,5 @@
-'use client';
+import { apiUrl } from '@/lib/api';
+('use client');
 
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -108,7 +109,7 @@ export default function QuestsPage() {
       console.log('All localStorage keys:', Object.keys(localStorage));
       console.log('Is authenticated:', isAuthenticated);
 
-      const response = await fetch('http://localhost:8000/api/quests/', {
+      const response = await fetch(apiUrl('/api/quests/'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -132,7 +133,7 @@ export default function QuestsPage() {
 
   const fetchProgress = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/quests/my-progress', {
+      const response = await fetch(apiUrl('/api/quests/my-progress'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -148,7 +149,7 @@ export default function QuestsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/quests/stats', {
+      const response = await fetch(apiUrl('/api/quests/stats'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -166,7 +167,7 @@ export default function QuestsPage() {
 
   const startQuest = async (questId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/quests/${questId}/start`, {
+      const response = await fetch(apiUrl(`/api/quests/${questId}/start`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

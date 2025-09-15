@@ -1,4 +1,5 @@
-'use client';
+import { apiUrl } from '@/lib/api';
+('use client');
 
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +66,7 @@ export default function QuestDetailPage() {
     try {
       // クエスト情報は一覧から取得したものを使用
       // 実際の実装では個別のクエスト取得APIを呼び出す
-      const response = await fetch('http://localhost:8000/api/quests/', {
+      const response = await fetch(apiUrl('/api/quests/'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -82,7 +83,7 @@ export default function QuestDetailPage() {
 
   const fetchProgress = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/quests/my-progress', {
+      const response = await fetch(apiUrl('/api/quests/my-progress'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -114,7 +115,7 @@ export default function QuestDetailPage() {
         progress_percentage: newProgress || progress.progress_percentage,
       };
 
-      const response = await fetch(`http://localhost:8000/api/quests/progress/${progress.id}`, {
+      const response = await fetch(apiUrl(`/api/quests/progress/${progress.id}`), {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -139,7 +140,7 @@ export default function QuestDetailPage() {
 
     setSaving(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/quests/progress/${progress.id}`, {
+      const response = await fetch(apiUrl(`/api/quests/progress/${progress.id}`), {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
