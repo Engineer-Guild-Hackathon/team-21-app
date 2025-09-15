@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { apiUrl } from '../../lib/api';
 
 export type UserRole = 'student' | 'teacher';
 
@@ -48,8 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<User> => {
     try {
       // APIリクエストを実装
-      const apiBase = 'http://localhost:8000';
-      const response = await fetch(`${apiBase}/api/auth/token`, {
+      const response = await fetch(apiUrl('/api/auth/token'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Token saved to localStorage:', access_token);
 
       // ユーザー情報を取得
-      const userResponse = await fetch(`${apiBase}/api/users/me`, {
+      const userResponse = await fetch(apiUrl('/api/users/me'), {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
@@ -122,8 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     try {
       // APIリクエストを実装
-      const apiBase = 'http://localhost:8000';
-      const response = await fetch(`${apiBase}/api/auth/register`, {
+      const response = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 登録後、自動的にログインしてトークンを取得
       try {
-        const loginResponse = await fetch(`${apiBase}/api/auth/token`, {
+        const loginResponse = await fetch(apiUrl('/api/auth/token'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
