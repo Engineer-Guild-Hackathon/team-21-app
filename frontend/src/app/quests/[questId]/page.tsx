@@ -48,6 +48,8 @@ export default function QuestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [questData, setQuestData] = useState<any>({});
+  const [isComposing, setIsComposing] = useState(false);
+  const setQuestDataLocal = (data: any) => setQuestData((prev: any) => ({ ...prev, ...data }));
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -226,7 +228,7 @@ export default function QuestDetailPage() {
                 id="help_content"
                 placeholder="例: 落とした教科書を拾って渡した"
                 value={questData.help_content || ''}
-                onChange={e => updateProgress({ help_content: e.target.value })}
+                onChange={e => setQuestDataLocal({ help_content: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -238,7 +240,7 @@ export default function QuestDetailPage() {
                 id="help_target"
                 placeholder="例: 友だち / 家族 / 先生"
                 value={questData.help_target || ''}
-                onChange={e => updateProgress({ help_target: e.target.value })}
+                onChange={e => setQuestDataLocal({ help_target: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -249,7 +251,7 @@ export default function QuestDetailPage() {
                 id="reaction"
                 className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
                 value={questData.reaction || ''}
-                onChange={e => updateProgress({ reaction: e.target.value })}
+                onChange={e => setQuestDataLocal({ reaction: e.target.value })}
               >
                 <option value="">選択してください</option>
                 <option value="smile">笑顔だった</option>
@@ -315,7 +317,7 @@ export default function QuestDetailPage() {
                   id={it.key}
                   placeholder={it.placeholder}
                   value={questData[it.key] || ''}
-                  onChange={e => updateProgress({ [it.key]: e.target.value })}
+                  onChange={e => setQuestDataLocal({ [it.key]: e.target.value })}
                   className="mt-1"
                 />
                 <div className="flex items-center space-x-2">
@@ -323,7 +325,7 @@ export default function QuestDetailPage() {
                   <select
                     className="block rounded-md border px-2 py-1 text-sm"
                     value={questData[`difficulty_${idx + 1}`] || ''}
-                    onChange={e => updateProgress({ [`difficulty_${idx + 1}`]: e.target.value })}
+                    onChange={e => setQuestDataLocal({ [`difficulty_${idx + 1}`]: e.target.value })}
                   >
                     <option value="">選択</option>
                     <option value="1">★☆☆☆☆</option>
@@ -379,7 +381,7 @@ export default function QuestDetailPage() {
                 id="question_text"
                 placeholder="例: この問題の考え方を教えてください"
                 value={questData.question_text || ''}
-                onChange={e => updateProgress({ question_text: e.target.value })}
+                onChange={e => setQuestDataLocal({ question_text: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -390,7 +392,7 @@ export default function QuestDetailPage() {
                 id="question_target"
                 placeholder="例: 先生 / 友だち / 家族"
                 value={questData.question_target || ''}
-                onChange={e => updateProgress({ question_target: e.target.value })}
+                onChange={e => setQuestDataLocal({ question_target: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -400,7 +402,7 @@ export default function QuestDetailPage() {
                 id="question_result"
                 className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
                 value={questData.question_result || ''}
-                onChange={e => updateProgress({ question_result: e.target.value })}
+                onChange={e => setQuestDataLocal({ question_result: e.target.value })}
               >
                 <option value="">選択してください</option>
                 <option value="solved">解決した</option>
@@ -466,7 +468,7 @@ export default function QuestDetailPage() {
                 id="habit_name"
                 placeholder="例: 3分片付け / 音読1ページ"
                 value={habitName}
-                onChange={e => updateProgress({ habit_name: e.target.value })}
+                onChange={e => setQuestDataLocal({ habit_name: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -477,7 +479,7 @@ export default function QuestDetailPage() {
                   <input
                     type="checkbox"
                     checked={!!questData[`day${d}`]}
-                    onChange={e => updateProgress({ [`day${d}`]: e.target.checked })}
+                    onChange={e => setQuestDataLocal({ [`day${d}`]: e.target.checked })}
                   />
                   <span>Day {d}</span>
                 </label>
@@ -524,7 +526,7 @@ export default function QuestDetailPage() {
                 id="teach_topic"
                 placeholder="例: 分数の足し算のやり方"
                 value={questData.teach_topic || ''}
-                onChange={e => updateProgress({ teach_topic: e.target.value })}
+                onChange={e => setQuestDataLocal({ teach_topic: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -534,7 +536,7 @@ export default function QuestDetailPage() {
                 id="teach_question"
                 placeholder="例: どこがむずかしかった？"
                 value={questData.teach_question || ''}
-                onChange={e => updateProgress({ teach_question: e.target.value })}
+                onChange={e => setQuestDataLocal({ teach_question: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -544,7 +546,7 @@ export default function QuestDetailPage() {
                 id="teach_check"
                 className="mt-1 block w-full rounded-md border px-3 py-2 text-sm"
                 value={questData.teach_check || ''}
-                onChange={e => updateProgress({ teach_check: e.target.value })}
+                onChange={e => setQuestDataLocal({ teach_check: e.target.value })}
               >
                 <option value="">選択してください</option>
                 <option value="understood">わかったみたい</option>
@@ -602,7 +604,7 @@ export default function QuestDetailPage() {
                 id="other_opinion"
                 placeholder="相手の意見を簡単に書きましょう"
                 value={questData.other_opinion || ''}
-                onChange={e => updateProgress({ other_opinion: e.target.value })}
+                onChange={e => setQuestDataLocal({ other_opinion: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -613,12 +615,12 @@ export default function QuestDetailPage() {
                 <Input
                   placeholder="良いところ 1"
                   value={questData.good_point_1 || ''}
-                  onChange={e => updateProgress({ good_point_1: e.target.value })}
+                  onChange={e => setQuestDataLocal({ good_point_1: e.target.value })}
                 />
                 <Input
                   placeholder="良いところ 2"
                   value={questData.good_point_2 || ''}
-                  onChange={e => updateProgress({ good_point_2: e.target.value })}
+                  onChange={e => setQuestDataLocal({ good_point_2: e.target.value })}
                 />
               </div>
             </div>
@@ -675,7 +677,7 @@ export default function QuestDetailPage() {
                 id="achievement"
                 placeholder="例: 難しい算数の問題を最後まで解いた"
                 value={questData.achievement || ''}
-                onChange={e => updateProgress({ achievement: e.target.value })}
+                onChange={e => setQuestDataLocal({ achievement: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -687,7 +689,7 @@ export default function QuestDetailPage() {
                 id="feeling"
                 placeholder="例: 最初は難しかったけど、最後まで頑張れて嬉しかった"
                 value={questData.feeling || ''}
-                onChange={e => updateProgress({ feeling: e.target.value })}
+                onChange={e => setQuestDataLocal({ feeling: e.target.value })}
                 className="mt-1"
                 rows={3}
               />
@@ -699,7 +701,7 @@ export default function QuestDetailPage() {
                 id="gratitude"
                 placeholder="例: 先生が優しく教えてくれたこと"
                 value={questData.gratitude || ''}
-                onChange={e => updateProgress({ gratitude: e.target.value })}
+                onChange={e => setQuestDataLocal({ gratitude: e.target.value })}
                 className="mt-1"
                 rows={2}
               />
@@ -885,7 +887,7 @@ export default function QuestDetailPage() {
                 id="prompt"
                 placeholder="例: 魔法の森で出会った不思議な友達"
                 value={questData.prompt || ''}
-                onChange={e => updateProgress({ prompt: e.target.value })}
+                onChange={e => setQuestDataLocal({ prompt: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -896,7 +898,7 @@ export default function QuestDetailPage() {
                 id="story"
                 placeholder="お話を書いてみましょう..."
                 value={questData.story || ''}
-                onChange={e => updateProgress({ story: e.target.value })}
+                onChange={e => setQuestDataLocal({ story: e.target.value })}
                 className="mt-1"
                 rows={8}
               />
@@ -908,7 +910,7 @@ export default function QuestDetailPage() {
                 id="characters"
                 placeholder="例: 主人公の少年、魔法の森の妖精"
                 value={questData.characters || ''}
-                onChange={e => updateProgress({ characters: e.target.value })}
+                onChange={e => setQuestDataLocal({ characters: e.target.value })}
                 className="mt-1"
               />
             </div>
@@ -984,11 +986,16 @@ export default function QuestDetailPage() {
                 <Input
                   id="newHint"
                   placeholder="ヒントを入力..."
-                  onKeyPress={e => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      const newHints = [...(questData.hints || []), e.currentTarget.value.trim()];
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
+                  onChange={e => setQuestDataLocal({ pendingHint: e.target.value })}
+                  onKeyDown={e => {
+                    if (isComposing) return;
+                    const value = (questData.pendingHint || '').trim();
+                    if (e.key === 'Enter' && value) {
+                      const newHints = [...(questData.hints || []), value];
+                      setQuestDataLocal({ hints: newHints, pendingHint: '' });
                       updateProgress({ hints: newHints });
-                      e.currentTarget.value = '';
                     }
                   }}
                 />
