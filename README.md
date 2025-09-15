@@ -16,38 +16,6 @@
 - デモ URL: https://app.34.107.156.246.nip.io
 - プレゼン URL：https://docs.google.com/presentation/d/1hHS2cDe4MEXkkj8w327hvk0X8XYnSb9D/edit?usp=sharing&ouid=112055515965380892799&rtpof=true&sd=true
 
-## AI チャット機能（Gemini API）
-
-### 設定方法
-
-1. **Google AI Studio で API キーを取得**
-
-   - https://makersuite.google.com/app/apikey にアクセス
-   - Google アカウントでログイン
-   - 「Create API Key」をクリックして API キーを生成
-
-2. **環境変数の設定**
-
-   ```bash
-   # frontend/.env.local ファイルを作成
-   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-
-3. **機能の特徴**
-   - 学習に特化した AI アシスタント
-   - 数学・理科・国語・社会・英語の質問対応
-   - 宿題の手伝いと問題解決サポート
-   - 段階的な説明と具体例
-   - 非認知能力の向上サポート
-
-### 使用方法
-
-- ナビゲーションバーの「AI チャット」をクリック
-- 学習に関する質問を入力
-- AI が学習に特化した回答を生成
-
----
-
 # 🏆 NonCog - AI 駆動型非認知能力学習プラットフォーム
 
 <div align="center">
@@ -83,16 +51,6 @@
 
 - **🌐 アプリケーション**: [https://app.34.107.156.246.nip.io](https://app.34.107.156.246.nip.io)
 - **📖 API 文書**: [https://api.34.107.156.246.nip.io/docs](https://api.34.107.156.246.nip.io/docs)
-
-### **デモアカウント**
-
-| 役割          | メールアドレス        | パスワード    | 説明                     |
-| ------------- | --------------------- | ------------- | ------------------------ |
-| 👨‍🎓 **生徒**   | `student@example.com` | `password123` | パーソナライズ学習を体験 |
-| 👨‍👩‍👧‍👦 **保護者** | `parent@example.com`  | `password123` | 子どもの進捗を監視       |
-| 👨‍🏫 **教師**   | `teacher@example.com` | `password123` | クラスルーム活動を管理   |
-
----
 
 ## 🏗️ **先進技術アーキテクチャ**
 
@@ -193,25 +151,6 @@ cp frontend/env.local.example frontend/.env.local
 docker-compose up -d
 ```
 
-### 🔴→🟢 リアルタイム更新（Kafka + SSE）
-
-本プロダクトは、生徒の学習イベントを Kafka に発行し、Backend のコンシューマで取り込み → インメモリ集計 →SSE でフロントに配信することで、画面が自動更新されます。
-
-- 主要エンドポイント
-  - POST `/api/learning/events/learn-action` 学習イベント送信
-  - GET `/api/learning/stream/{user_id}` SSE ストリーム（クライアント購読）
-- 必須環境変数（docker-compose に定義済み）
-  - `ENABLE_KAFKA_PRODUCE=true`
-  - `ENABLE_KAFKA_CONSUME=true`
-  - `KAFKA_BOOTSTRAP_SERVERS=kafka:9092`
-  - `KAFKA_LEARN_EVENT_TOPIC=learn_action_events`
-  - Frontend: `NEXT_PUBLIC_API_BASE=http://localhost:8000`
-- 動作確認
-  1. `docker compose up -d frontend backend kafka zookeeper`
-  2. ブラウザで `http://localhost:3000/noncog` を開く（バッジが「🟢 Real-time Connected」になれば OK）
-  3. 画面の「Send Retry Event」を押すと、数値（Retry/Avg Think/Grit/SRL）が手動リロードなしで更新
-  4. SSE 単体: `curl -s http://localhost:8000/api/learning/stream/1`
-
 ### **開発コマンド**
 
 ```bash
@@ -230,7 +169,6 @@ make lint
 # データベースマイグレーション
 make db-migrate
 ```
-
 ---
 
 ## 📊 **監視 & 分析**
