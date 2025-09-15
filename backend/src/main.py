@@ -130,3 +130,15 @@ app.include_router(ml_integration.router, prefix="/api/ml", tags=["ML統合"])
 async def root() -> dict[str, str]:
     """ルートエンドポイント"""
     return {"message": "非認知能力学習プラットフォーム API"}
+
+
+@app.get("/health")
+async def health_check() -> dict[str, str]:
+    """ヘルスチェックエンドポイント"""
+    return {"status": "healthy", "message": "API is running"}
+
+
+@app.head("/health")
+async def health_check_head() -> None:
+    """ヘルスチェックエンドポイント（HEADメソッド対応）"""
+    return None
