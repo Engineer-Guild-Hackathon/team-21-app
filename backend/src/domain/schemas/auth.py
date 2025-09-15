@@ -30,7 +30,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
-    role: str | None = None
+    role: str
     model_config = ConfigDict(from_attributes=True)
 
 
