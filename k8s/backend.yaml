@@ -45,18 +45,36 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: JWT_SECRET
-            - name: DB_PASS
+            - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
-                  key: DB_PASS
-            - name: DATABASE_URL
-              value: postgresql+asyncpg://postgres:$(DB_PASS)@127.0.0.1:5432/noncog
+                  key: DATABASE_URL
             - name: ALLOWED_ORIGINS
               valueFrom:
                 configMapKeyRef:
                   name: app-config
                   key: ALLOWED_ORIGINS
+            - name: KAFKA_SECURITY_PROTOCOL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_SECURITY_PROTOCOL
+            - name: KAFKA_SASL_MECHANISM
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KAFKA_SASL_MECHANISM
+            - name: KAFKA_SASL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: kafka-sasl-secret
+                  key: KAFKA_SASL_USERNAME
+            - name: KAFKA_SASL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kafka-sasl-secret
+                  key: KAFKA_SASL_PASSWORD
           readinessProbe:
             httpGet:
               path: /docs
@@ -103,7 +121,7 @@ metadata:
   annotations:
     cloud.google.com/backend-config: '{"default": "backend-bec"}'
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: backend
   ports:

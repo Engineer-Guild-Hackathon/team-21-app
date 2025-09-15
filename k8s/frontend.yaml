@@ -47,7 +47,7 @@ metadata:
   name: frontend
   namespace: noncog
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: frontend
   ports:

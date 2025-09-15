@@ -1,5 +1,5 @@
 import { apiUrl } from '@/lib/api';
-'use client';
+('use client');
 
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
