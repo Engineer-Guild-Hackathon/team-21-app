@@ -1,5 +1,6 @@
 'use client';
 
+import { apiUrl } from '@/lib/api';
 import { ChartBarIcon, ClockIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -31,7 +32,7 @@ export default function TeacherAnalysisPage() {
 
   const fetchAnalysisData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/classes/my-classes', {
+      const response = await fetch(`${apiUrl('')}/api/classes/my-classes`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },

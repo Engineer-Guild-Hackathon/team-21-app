@@ -4,6 +4,7 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiUrl } from '@/lib/api';
 
 interface Class {
   id: number;
@@ -32,7 +33,7 @@ export default function TeacherClassesPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/classes/my-classes', {
+      const response = await fetch('${apiUrl('')}/api/classes/my-classes', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },
@@ -51,7 +52,7 @@ export default function TeacherClassesPage() {
   const createClass = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/api/classes/', {
+      const response = await fetch('${apiUrl('')}/api/classes/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
