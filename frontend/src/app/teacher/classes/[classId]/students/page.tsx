@@ -1,11 +1,11 @@
 'use client';
 
+import { apiUrl } from '@/lib/api';
 import { ArrowLeftIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../../contexts/AuthContext';
-import { apiUrl } from '@/lib/api';
 
 interface LearningProgress {
   id: number;

@@ -99,7 +99,12 @@ spec:
           args:
             - "--port=5432"
             - "--address=127.0.0.1"
+            - "--credentials-file=/secrets/credentials.json"
             - "web-summarizer-app:asia-northeast1:noncog-pg"
+          volumeMounts:
+            - name: sql-proxy-key
+              mountPath: /secrets
+              readOnly: true
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -110,6 +115,10 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
+      volumes:
+        - name: sql-proxy-key
+          secret:
+            secretName: sql-proxy-key
       restartPolicy: Always
 ---
 apiVersion: v1
