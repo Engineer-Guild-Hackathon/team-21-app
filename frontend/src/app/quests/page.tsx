@@ -1,5 +1,6 @@
+'use client';
+
 import { apiUrl } from '@/lib/api';
-('use client');
 
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
