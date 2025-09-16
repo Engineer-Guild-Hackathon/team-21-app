@@ -132,11 +132,12 @@ async def register_user(
     await db.refresh(db_user)
 
     # 新規ユーザーにデフォルトアバターと統計情報を作成（エラーが発生しても登録は続行）
-    try:
-        await create_default_user_setup(db_user.id, db)
-    except Exception as e:
-        print(f"Warning: Default user setup failed: {e}")
-        # デフォルトセットアップが失敗してもユーザー登録は成功とする
+    # 一時的に無効化して基本的な登録機能をテスト
+    # try:
+    #     await create_default_user_setup(db_user.id, db)
+    # except Exception as e:
+    #     print(f"Warning: Default user setup failed: {e}")
+    #     # デフォルトセットアップが失敗してもユーザー登録は成功とする
 
     return UserResponse(
         id=db_user.id,
