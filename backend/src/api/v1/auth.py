@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.security import (
     authenticate_user,
     create_access_token,
@@ -78,7 +77,7 @@ async def login_for_access_token(
 @router.post("/register", response_model=UserResponse)
 async def register_user(
     user_data: UserCreate, db: AsyncSession = Depends(get_db)
-) -> User:
+) -> UserResponse:
     # メールアドレスの重複チェック
     from sqlalchemy import select
 
@@ -139,11 +138,29 @@ async def register_user(
         print(f"Warning: Default user setup failed: {e}")
         # デフォルトセットアップが失敗してもユーザー登録は成功とする
 
-    return db_user
+    return UserResponse(
+        id=db_user.id,
+        email=db_user.email,
+        full_name=db_user.full_name,
+        role=db_user.role,
+        is_active=db_user.is_active,
+        is_verified=db_user.is_verified,
+        created_at=db_user.created_at,
+        updated_at=db_user.updated_at,
+    )
 
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
-) -> User:
-    return current_user
+) -> UserResponse:
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        role=current_user.role,
+        is_active=current_user.is_active,
+        is_verified=current_user.is_verified,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at,
+    )
