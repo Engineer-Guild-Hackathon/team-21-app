@@ -144,6 +144,66 @@ async def get_user_profile(
     owned_avatars_result = await db.execute(owned_avatars_stmt)
     owned_avatars = owned_avatars_result.scalars().all()
 
+    # 初回アクセス時: デフォルトアバター（ひよこ）を自動付与して現在アバターに設定
+    if not owned_avatars:
+        # デフォルト候補を検索（名前で優先的に探し、なければ最も若い並び順のアクティブアバター）
+        default_avatar_stmt = (
+            select(Avatar)
+            .where(
+                and_(
+                    Avatar.is_active,
+                    Avatar.name.in_(["ひよこ", "Chick", "ひよこ(初期)"]),
+                )
+            )
+            .order_by(Avatar.sort_order, Avatar.created_at)
+        )
+        default_avatar_result = await db.execute(default_avatar_stmt)
+        default_avatar = default_avatar_result.scalars().first()
+
+        if not default_avatar:
+            # 既存がない場合はデフォルトアバターを作成
+            default_avatar = Avatar(
+                name="ひよこ",
+                description="初期アバター",
+                image_url="/avatars/chick.png",
+                category="character",
+                rarity="common",
+                is_active=True,
+                sort_order=0,
+            )
+            db.add(default_avatar)
+            await db.commit()
+            await db.refresh(default_avatar)
+
+        if default_avatar:
+            new_user_avatar = UserAvatar(
+                user_id=current_user.id,
+                avatar_id=default_avatar.id,
+                is_current=True,
+            )
+            db.add(new_user_avatar)
+            # 同一トランザクションで avatar 作成→付与を確定させる
+            await db.commit()
+
+            # 再取得してレスポンスへ反映
+            owned_avatars_stmt = (
+                select(UserAvatar)
+                .options(selectinload(UserAvatar.avatar))
+                .where(UserAvatar.user_id == current_user.id)
+            )
+            owned_avatars_result = await db.execute(owned_avatars_stmt)
+            owned_avatars = owned_avatars_result.scalars().all()
+
+            current_avatar_stmt = (
+                select(UserAvatar)
+                .options(selectinload(UserAvatar.avatar))
+                .where(
+                    and_(UserAvatar.user_id == current_user.id, UserAvatar.is_current)
+                )
+            )
+            current_avatar_result = await db.execute(current_avatar_stmt)
+            current_avatar = current_avatar_result.scalar_one_or_none()
+
     # 所持している称号一覧を取得
     owned_titles_stmt = (
         select(UserTitle)

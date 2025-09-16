@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { BookOpen, Clock, Lightbulb, Star, Trophy, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Quest {
   id: number;
@@ -83,6 +83,16 @@ const statusLabels = {
   locked: 'ロック中',
 };
 
+// 対象スキルの日本語ラベル
+const skillLabels: Record<string, string> = {
+  grit: 'やり抜く力',
+  collaboration: '協働',
+  self_regulation: '自己制御',
+  emotional_intelligence: '情動知能',
+};
+
+const tSkill = (key?: string | null) => (key ? skillLabels[key] || key : '');
+
 export default function QuestsPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -91,6 +101,12 @@ export default function QuestsPage() {
   const [stats, setStats] = useState<QuestStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'available' | 'progress' | 'stats'>('available');
+  // 無限スクロール用
+  const PAGE_SIZE = 12;
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -98,19 +114,20 @@ export default function QuestsPage() {
       return;
     }
 
-    fetchQuests();
+    // 初回は1ページ目を読み込み
+    fetchQuests(1, true);
     fetchProgress();
     fetchStats();
   }, [isAuthenticated, router]);
 
-  const fetchQuests = async () => {
+  const fetchQuests = async (pageToLoad: number, replace = false) => {
     try {
       const token = localStorage.getItem('token');
       console.log('Token:', token);
       console.log('All localStorage keys:', Object.keys(localStorage));
       console.log('Is authenticated:', isAuthenticated);
 
-      const response = await fetch(apiUrl('/api/quests/'), {
+      const response = await fetch(apiUrl(`/api/quests/?page=${pageToLoad}&size=${PAGE_SIZE}`), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -122,7 +139,23 @@ export default function QuestsPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Quests data:', data);
-        setQuests(data.quests);
+        setHasMore(pageToLoad * PAGE_SIZE < (data.total || 0));
+        if (replace) {
+          setQuests(data.quests);
+          setPage(1);
+          // 初回に2ページ目を先読み（UX向上）
+          if ((data.total || 0) > PAGE_SIZE) {
+            setLoadingMore(true);
+            try {
+              await fetchQuests(2);
+            } finally {
+              setLoadingMore(false);
+            }
+          }
+        } else {
+          setQuests(prev => [...prev, ...data.quests]);
+          setPage(pageToLoad);
+        }
       } else {
         const errorText = await response.text();
         console.error('Response error:', errorText);
@@ -131,6 +164,29 @@ export default function QuestsPage() {
       console.error('クエスト取得エラー:', error);
     }
   };
+
+  // 無限スクロール: 交差監視
+  useEffect(() => {
+    if (activeTab !== 'available') return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      async entries => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !loadingMore) {
+          setLoadingMore(true);
+          try {
+            await fetchQuests(page + 1);
+          } finally {
+            setLoadingMore(false);
+          }
+        }
+      },
+      { root: null, rootMargin: '600px', threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeTab, hasMore, loadingMore, page]);
 
   const fetchProgress = async () => {
     try {
@@ -284,7 +340,7 @@ export default function QuestsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span>対象スキル: {quest.target_skill}</span>
+                      <span>対象スキル: {tSkill(quest.target_skill)}</span>
                     </div>
 
                     <div className="flex items-center space-x-4 text-sm">
@@ -302,7 +358,7 @@ export default function QuestsPage() {
                       </div>
                     </div>
 
-                    {questProgress && (
+                    {questProgress && questProgress.progress_percentage > 0 && (
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>進捗</span>
@@ -332,6 +388,18 @@ export default function QuestsPage() {
               </Card>
             );
           })}
+          {/* 無限スクロール用センチネル + フォールバックボタン */}
+          <div ref={sentinelRef} className="col-span-full h-12" />
+          {loadingMore && (
+            <div className="col-span-full text-center text-sm text-gray-500">読み込み中...</div>
+          )}
+          {!loadingMore && hasMore && (
+            <div className="col-span-full flex justify-center">
+              <Button variant="outline" onClick={() => fetchQuests(page + 1)}>
+                さらに読み込む
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -366,11 +434,15 @@ export default function QuestsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex justify-between text-sm">
-                      <span>進捗</span>
-                      <span>{questProgress.progress_percentage.toFixed(0)}%</span>
-                    </div>
-                    <Progress value={questProgress.progress_percentage} className="h-3" />
+                    {questProgress.progress_percentage > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span>進捗</span>
+                          <span>{questProgress.progress_percentage.toFixed(0)}%</span>
+                        </div>
+                        <Progress value={questProgress.progress_percentage} className="h-3" />
+                      </>
+                    )}
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>

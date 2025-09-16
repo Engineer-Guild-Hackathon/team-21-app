@@ -5,6 +5,7 @@
 """
 
 from datetime import datetime
+from math import floor
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -247,7 +248,61 @@ async def update_quest_progress(
     for field, value in update_data.items():
         setattr(progress, field, value)
 
-    # 完了時の処理
+    # current_step / total_steps から自動で割合を算出
+    # - ステップが更新された場合にのみ再計算
+    if "current_step" in update_data or "total_steps" in update_data:
+        total_steps = progress.total_steps or 0
+        current_step = progress.current_step or 0
+        if total_steps > 0:
+            computed = floor((current_step / total_steps) * 100)
+            computed = max(0, min(100, computed))
+            progress.progress_percentage = float(computed)
+
+            # ステップで100%に到達した場合は自動的に完了へ遷移
+            if computed >= 100 and progress.status != QuestStatus.COMPLETED:
+                progress.status = QuestStatus.COMPLETED
+                progress.completed_date = datetime.utcnow()
+
+                # 報酬を付与（完了時の処理と同等）
+                quest = await db.get(Quest, progress.quest_id)
+                if quest:
+                    reward = QuestReward(
+                        user_id=current_user.id,
+                        quest_id=quest.id,
+                        reward_type="experience",
+                        reward_value=quest.experience_points,
+                    )
+                    db.add(reward)
+                    reward.is_claimed = True
+                    reward.claimed_at = datetime.utcnow()
+
+                    if quest.coins > 0:
+                        coin_reward = QuestReward(
+                            user_id=current_user.id,
+                            quest_id=quest.id,
+                            reward_type="coins",
+                            reward_value=quest.coins,
+                        )
+                        db.add(coin_reward)
+                        coin_reward.is_claimed = True
+                        coin_reward.claimed_at = datetime.utcnow()
+
+                    if quest.badge_id:
+                        badge_reward = QuestReward(
+                            user_id=current_user.id,
+                            quest_id=quest.id,
+                            reward_type="badge",
+                            reward_value=1,
+                            reward_data={"badge_id": quest.badge_id},
+                        )
+                        db.add(badge_reward)
+
+                    await update_user_stats_on_quest_completion(
+                        current_user.id, quest, db
+                    )
+                    await check_and_unlock_achievements(current_user.id, db)
+
+    # 明示的に完了指定された場合の処理
     if progress_update.status == QuestStatus.COMPLETED:
         progress.completed_date = datetime.utcnow()
         progress.progress_percentage = 100.0
