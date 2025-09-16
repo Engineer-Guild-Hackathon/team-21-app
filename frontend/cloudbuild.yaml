@@ -7,6 +7,8 @@ steps:
       - '${_REGISTRY}/frontend:${SHORT_SHA}'
       - '--build-arg'
       - 'NEXT_PUBLIC_API_BASE_URL=${_API_BASE_URL}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_GEMINI_API_KEY=${_GEMINI_KEY}'
       - '.'
 
   # イメージのプッシュ
@@ -18,3 +20,4 @@ steps:
 substitutions:
   _REGISTRY: 'asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg'
   _API_BASE_URL: 'https://api.34.107.156.246.nip.io'
+  _GEMINI_KEY: ''

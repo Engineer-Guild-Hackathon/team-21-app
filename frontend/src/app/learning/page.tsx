@@ -68,7 +68,7 @@ export default function AIChatPage() {
       if (!token) return;
 
       // 新しいチャットセッションを作成
-      const response = await fetch('${apiUrl("")}/api/chat/sessions', {
+      const response = await fetch(apiUrl('/api/chat/sessions'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export default function AIChatPage() {
       const token = localStorage.getItem('token');
       if (!token || !currentSessionId) return;
 
-      const response = await fetch(`${apiUrl('')}/api/chat/sessions/${currentSessionId}/messages`, {
+      const response = await fetch(apiUrl(`/api/chat/sessions/${currentSessionId}/messages`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export default function AIChatPage() {
         timestamp: msg.timestamp.toISOString(),
       }));
 
-      const response = await fetch('${apiUrl("")}/api/ml/analyze-conversation', {
+      const response = await fetch(apiUrl('/api/ml/analyze-conversation'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,7 +226,7 @@ export default function AIChatPage() {
       setIsAutoAnalyzing(true);
       console.log('自動ML分析を実行中...');
 
-      const response = await fetch('${apiUrl("")}/api/ml/analyze-from-database', {
+      const response = await fetch(apiUrl('/api/ml/analyze-from-database'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

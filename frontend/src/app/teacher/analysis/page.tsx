@@ -32,7 +32,7 @@ export default function TeacherAnalysisPage() {
 
   const fetchAnalysisData = async () => {
     try {
-      const response = await fetch(`${apiUrl('')}/api/classes/my-classes`, {
+      const response = await fetch(apiUrl('/api/classes/my-classes'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },

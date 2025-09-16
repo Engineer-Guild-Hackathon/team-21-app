@@ -38,7 +38,7 @@ export default function TeacherRecordsPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${apiUrl('')}/api/classes/my-classes`, {
+      const response = await fetch(apiUrl('/api/classes/my-classes'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },
@@ -58,7 +58,7 @@ export default function TeacherRecordsPage() {
   const fetchRecords = async () => {
     try {
       // 実際のAPIエンドポイントに合わせて調整
-      const response = await fetch(`${apiUrl('')}/api/classes/my-classes`, {
+      const response = await fetch(apiUrl('/api/classes/my-classes'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },

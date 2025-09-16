@@ -42,7 +42,7 @@ export default function ClassStudentsPage({ params }: { params: { classId: strin
 
   const fetchStudents = async () => {
     try {
-      const response = await fetch(`${apiUrl('')}/api/classes/${params.classId}/students`, {
+      const response = await fetch(apiUrl(`/api/classes/${params.classId}/students`), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },

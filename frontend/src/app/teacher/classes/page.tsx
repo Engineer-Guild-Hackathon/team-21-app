@@ -33,7 +33,7 @@ export default function TeacherClassesPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${apiUrl('')}/api/classes/my-classes`, {
+      const response = await fetch(apiUrl('/api/classes/my-classes'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },
@@ -52,7 +52,7 @@ export default function TeacherClassesPage() {
   const createClass = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${apiUrl('')}/api/classes/`, {
+      const response = await fetch(apiUrl('/api/classes/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

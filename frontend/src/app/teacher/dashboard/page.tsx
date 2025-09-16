@@ -37,7 +37,7 @@ export default function TeacherDashboardPage() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${apiUrl('')}/api/classes/my-classes`, {
+      const response = await fetch(apiUrl('/api/classes/my-classes'), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },
