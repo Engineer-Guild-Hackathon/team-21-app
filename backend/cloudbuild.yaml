@@ -1,0 +1,15 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGISTRY}/backend:${SHORT_SHA}'
+      - '.'
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGISTRY}/backend:${SHORT_SHA}'
+substitutions:
+  _REGISTRY: 'asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg'
+images:
+  - 'asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg/backend:${SHORT_SHA}'

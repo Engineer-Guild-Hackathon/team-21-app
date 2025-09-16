@@ -1,0 +1,17 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGISTRY}/frontend:${_TAG}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_BASE_URL=${_API_BASE_URL}'
+      - '.'
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_REGISTRY}/frontend:${_TAG}'
+substitutions:
+  _REGISTRY: 'asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg'
+  _API_BASE_URL: 'https://api.34.107.156.246.nip.io'
+  _TAG: 'manual'

@@ -1,5 +1,5 @@
+'use client';
 import { apiUrl } from '@/lib/api';
-('use client');
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -47,7 +47,7 @@ export default function ProgressPage() {
 
       console.log('📤 ユーザー統計取得リクエスト送信');
 
-      const response = await fetch('${apiUrl("")}/api/avatars/stats', {
+      const response = await fetch(apiUrl('/api/avatars/stats'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },

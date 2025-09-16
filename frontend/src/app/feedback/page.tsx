@@ -1,5 +1,5 @@
+'use client';
 import { apiUrl } from '@/lib/api';
-('use client');
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -54,7 +54,7 @@ export default function FeedbackPage() {
       console.log('📤 ML分析結果取得リクエスト送信');
 
       // 最新のML分析結果を取得
-      const response = await fetch('${apiUrl("")}/api/ml/latest-analysis', {
+      const response = await fetch(apiUrl('/api/ml/latest-analysis'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
