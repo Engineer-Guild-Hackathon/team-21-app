@@ -46,4 +46,4 @@ COPY . .
 ENV PYTHONPATH=/app
 
 # 本番サーバーの起動（起動前にalembicを冪等実行）
-CMD ["/bin/sh","-c","alembic upgrade head || true && uvicorn src.main:app --host 0.0.0.0 --port 8000"]
+CMD ["/bin/sh","-c","alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"]
