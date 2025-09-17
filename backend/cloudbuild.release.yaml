@@ -1,0 +1,16 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "${_REGISTRY}/backend:${_TAG}"
+      - "."
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_REGISTRY}/backend:${_TAG}"
+substitutions:
+  _REGISTRY: "asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg"
+  _TAG: "manual"
+images:
+  - "asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg/backend:${_TAG}"

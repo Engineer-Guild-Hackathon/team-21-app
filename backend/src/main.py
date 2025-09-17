@@ -3,8 +3,11 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1 import (
     auth,
@@ -19,6 +22,7 @@ from src.api.v1 import (
     quests,
     users,
 )
+from src.infrastructure.database import get_db
 
 
 @asynccontextmanager
@@ -142,3 +146,30 @@ async def health_check() -> dict[str, str]:
 async def health_check_head() -> None:
     """ヘルスチェックエンドポイント（HEADメソッド対応）"""
     return None
+
+
+@app.get("/ready")
+async def readiness_check(db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+    """Readinessチェック: DB接続とマイグレーション状態を検査
+
+    - DBに接続して SELECT 1 が通ること
+    - alembic_version テーブルが存在し、version_num が取得できること（存在しない場合は"unknown"）
+    """
+    try:
+        # DB接続確認
+        await db.execute(text("SELECT 1"))
+        migrated = "unknown"
+        try:
+            result = await db.execute(
+                text("SELECT version_num FROM alembic_version LIMIT 1")
+            )
+            row = result.first()
+            if row and row[0]:
+                migrated = str(row[0])
+        except SQLAlchemyError:
+            # マイグレーション未実行の可能性
+            migrated = "absent"
+
+        return {"status": "ready", "db": "ok", "alembic_version": migrated}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"not ready: {e}")

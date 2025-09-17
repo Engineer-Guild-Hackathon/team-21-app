@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-script
+  namespace: noncog
+data:
+  setup_database.sh: |
+    #!/bin/sh
+    set -e
+    echo "=== データベース初期化スクリプト(Job) ==="
+    if [ -z "$DATABASE_URL" ]; then
+      echo "DATABASE_URL not set" >&2
+      exit 1
+    fi
+    echo "DATABASE_URL: $DATABASE_URL"
+    # 例: postgresql://postgres:postgres@127.0.0.1:5432/noncog
+    BASE_URL=$(echo "$DATABASE_URL" | sed "s/\/[^/]*$/\/postgres/")
+    echo "ベース接続チェック($BASE_URL) ..."
+    # プロキシ起動待ち
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+      if psql "$BASE_URL" -c "SELECT 1;" >/dev/null 2>&1; then
+        READY=1; break; fi; echo "waiting..."; sleep 2; done
+    if [ -z "$READY" ]; then echo "接続不可" >&2; exit 1; fi
+
+    # noncog DBが無ければ作成
+    DB_NAME=$(echo "$DATABASE_URL" | awk -F/ '{print $NF}')
+    echo "データベース作成確認: $DB_NAME"
+    psql "$BASE_URL" -tc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" | grep -q 1 || \
+      psql "$BASE_URL" -c "CREATE DATABASE ${DB_NAME};"
+
+    echo "noncog接続チェック..."
+    psql "$DATABASE_URL" -c "SELECT 1;" >/dev/null 2>&1
+    echo "テーブル作成..."
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      hashed_password VARCHAR(255) NOT NULL,
+      full_name VARCHAR(255),
+      role VARCHAR(50) NOT NULL DEFAULT 'student',
+      class_id VARCHAR(255),
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+      terms_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+      terms_accepted_at TIMESTAMP WITH TIME ZONE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'questtype') THEN
+      CREATE TYPE questtype AS ENUM ('DAILY_LOG','PLANT_CARE','STORY_CREATION','COLLABORATION','EMOTION_REGULATION','PROBLEM_SOLVING');
+    END IF; END $$;
+    DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'questdifficulty') THEN
+      CREATE TYPE questdifficulty AS ENUM ('EASY','MEDIUM','HARD');
+    END IF; END $$;
+    DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'queststatus') THEN
+      CREATE TYPE queststatus AS ENUM ('NOT_STARTED','IN_PROGRESS','COMPLETED');
+    END IF; END $$;
+
+    CREATE TABLE IF NOT EXISTS classes (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      teacher_id INTEGER REFERENCES users(id),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS learning_progress (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      class_id INTEGER REFERENCES classes(id),
+      skill_type VARCHAR(100) NOT NULL,
+      current_level DECIMAL(5,2) DEFAULT 1.0,
+      progress_percentage DECIMAL(5,2) DEFAULT 0.0,
+      last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS quests (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      quest_type questtype NOT NULL,
+      difficulty questdifficulty NOT NULL,
+      target_skill VARCHAR(100),
+      experience_points INTEGER DEFAULT 0,
+      coins INTEGER DEFAULT 0,
+      badge_id INTEGER,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS quest_progresses (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      quest_id INTEGER REFERENCES quests(id),
+      status queststatus DEFAULT 'NOT_STARTED',
+      current_step INTEGER DEFAULT 0,
+      total_steps INTEGER DEFAULT 1,
+      progress_percentage DECIMAL(5,2) DEFAULT 0.0,
+      started_date TIMESTAMP WITH TIME ZONE,
+      completed_date TIMESTAMP WITH TIME ZONE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, quest_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS quest_rewards (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      quest_id INTEGER REFERENCES quests(id),
+      reward_type VARCHAR(50) NOT NULL,
+      reward_value INTEGER NOT NULL,
+      reward_data JSONB,
+      is_claimed BOOLEAN DEFAULT FALSE,
+      claimed_at TIMESTAMP WITH TIME ZONE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS avatars (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      image_url VARCHAR(500),
+      category VARCHAR(100),
+      rarity VARCHAR(50),
+      is_active BOOLEAN DEFAULT TRUE,
+      sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS user_avatars (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      avatar_id INTEGER REFERENCES avatars(id),
+      is_current BOOLEAN DEFAULT FALSE,
+      acquired_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, avatar_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_stats (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      grit_level DECIMAL(5,2) DEFAULT 1.0,
+      collaboration_level DECIMAL(5,2) DEFAULT 1.0,
+      self_regulation_level DECIMAL(5,2) DEFAULT 1.0,
+      emotional_intelligence_level DECIMAL(5,2) DEFAULT 1.0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id)
+    );
+    SQL
+    echo "=== Job: 初期化完了 ==="
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  namespace: noncog
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: db-init
+          image: postgres:15
+          command: ["sh", "/scripts/setup_database.sh"]
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://postgres:postgres@127.0.0.1:5432/noncog"
+          volumeMounts:
+            - name: db-init-script
+              mountPath: /scripts
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.3
+          args:
+            - "--port=5432"
+            - "--address=127.0.0.1"
+            - "--credentials-file=/secrets/credentials.json"
+            - "web-summarizer-app:asia-northeast1:noncog-pg"
+          volumeMounts:
+            - name: sql-proxy-key
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: db-init-script
+          configMap:
+            name: db-init-script
+            defaultMode: 0555
+        - name: sql-proxy-key
+          secret:
+            secretName: sql-proxy-key
