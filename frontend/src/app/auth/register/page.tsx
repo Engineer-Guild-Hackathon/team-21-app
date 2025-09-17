@@ -36,7 +36,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await register(email, password, role, name, classId, termsAccepted);
+      await register(email, password, role, name, classId, termsAccepted, confirmPassword);
       router.push('/');
     } catch (err) {
       setError('登録に失敗しました。入力内容を確認してください。');

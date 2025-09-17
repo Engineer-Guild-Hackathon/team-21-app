@@ -24,7 +24,8 @@ interface AuthContextType {
     role: UserRole,
     name: string,
     classId?: string,
-    termsAccepted?: boolean
+    termsAccepted?: boolean,
+    passwordConfirm?: string
   ) => Promise<void>;
 }
 
@@ -118,7 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: UserRole,
     name: string,
     classId?: string,
-    termsAccepted: boolean = true
+    termsAccepted: boolean = true,
+    passwordConfirm?: string
   ) => {
     try {
       // APIリクエストを実装
@@ -130,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           email,
           password,
-          password_confirm: password,
+          password_confirm: passwordConfirm || password,
           full_name: name,
           role,
           class_id: classId,
