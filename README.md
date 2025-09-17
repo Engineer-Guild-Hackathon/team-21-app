@@ -14,7 +14,7 @@
 ## デモ　/ プレゼン資料
 
 - デモ URL: https://app.34.107.156.246.nip.io
-- プレゼン URL：https://docs.google.com/presentation/d/1hHS2cDe4MEXkkj8w327hvk0X8XYnSb9D/edit?usp=sharing&ouid=112055515965380892799&rtpof=true&sd=true
+- プレゼン URL：https://docs.google.com/presentation/d/1j2Pcs6XvNc8kOFk2TyW4EIe7R02yZR7A8TDWOpeuKi8/edit?usp=sharing
 
 # 🏆 NonCog - AI 駆動型非認知能力学習プラットフォーム
 
