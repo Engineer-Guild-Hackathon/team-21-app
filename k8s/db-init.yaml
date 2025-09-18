@@ -59,12 +59,50 @@ data:
 
     CREATE TABLE IF NOT EXISTS classes (
       id SERIAL PRIMARY KEY,
+      class_id VARCHAR(255) UNIQUE,
       name VARCHAR(255) NOT NULL,
       description TEXT,
       teacher_id INTEGER REFERENCES users(id),
+      is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- 既存環境で不足している列を追加（idempotent）
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'classes' AND column_name = 'class_id'
+      ) THEN
+        ALTER TABLE classes ADD COLUMN class_id VARCHAR(255) UNIQUE;
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'classes' AND column_name = 'is_active'
+      ) THEN
+        ALTER TABLE classes ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'classes' AND column_name = 'updated_at'
+      ) THEN
+        ALTER TABLE classes ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+      END IF;
+    END$$;
+
+    -- インデックス（存在しない場合のみ）
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE c.relname = 'idx_classes_class_id' AND n.nspname = 'public'
+      ) THEN
+        CREATE UNIQUE INDEX idx_classes_class_id ON classes(class_id);
+      END IF;
+    END$$;
 
     CREATE TABLE IF NOT EXISTS learning_progress (
       id SERIAL PRIMARY KEY,
@@ -92,6 +130,44 @@ data:
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- quests: 不足カラムの恒久追加
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quests' AND column_name = 'estimated_duration'
+      ) THEN
+        ALTER TABLE quests ADD COLUMN estimated_duration INTEGER DEFAULT 10;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quests' AND column_name = 'required_level'
+      ) THEN
+        ALTER TABLE quests ADD COLUMN required_level INTEGER DEFAULT 1;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quests' AND column_name = 'quest_config'
+      ) THEN
+        ALTER TABLE quests ADD COLUMN quest_config JSONB;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quests' AND column_name = 'is_daily'
+      ) THEN
+        ALTER TABLE quests ADD COLUMN is_daily BOOLEAN DEFAULT FALSE;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quests' AND column_name = 'sort_order'
+      ) THEN
+        ALTER TABLE quests ADD COLUMN sort_order INTEGER DEFAULT 0;
+      END IF;
+      -- 既存行のNULLをデフォルト0で埋める
+      EXECUTE 'UPDATE quests SET estimated_duration = 10 WHERE estimated_duration IS NULL OR estimated_duration = 0';
+      EXECUTE 'UPDATE quests SET required_level = 1 WHERE required_level IS NULL OR required_level = 0';
+    END$$;
+
     CREATE TABLE IF NOT EXISTS quest_progresses (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id),
@@ -100,12 +176,52 @@ data:
       current_step INTEGER DEFAULT 0,
       total_steps INTEGER DEFAULT 1,
       progress_percentage DECIMAL(5,2) DEFAULT 0.0,
+      quest_data JSONB,
       started_date TIMESTAMP WITH TIME ZONE,
       completed_date TIMESTAMP WITH TIME ZONE,
+      streak_count INTEGER DEFAULT 0,
+      self_evaluation TEXT,
+      teacher_feedback TEXT,
+      ai_feedback TEXT,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, quest_id)
     );
+
+    -- quest_progresses: 不足カラムの恒久追加
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quest_progresses' AND column_name = 'quest_data'
+      ) THEN
+        ALTER TABLE quest_progresses ADD COLUMN quest_data JSONB;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quest_progresses' AND column_name = 'streak_count'
+      ) THEN
+        ALTER TABLE quest_progresses ADD COLUMN streak_count INTEGER DEFAULT 0;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quest_progresses' AND column_name = 'self_evaluation'
+      ) THEN
+        ALTER TABLE quest_progresses ADD COLUMN self_evaluation TEXT;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quest_progresses' AND column_name = 'teacher_feedback'
+      ) THEN
+        ALTER TABLE quest_progresses ADD COLUMN teacher_feedback TEXT;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'quest_progresses' AND column_name = 'ai_feedback'
+      ) THEN
+        ALTER TABLE quest_progresses ADD COLUMN ai_feedback TEXT;
+      END IF;
+    END$$;
 
     CREATE TABLE IF NOT EXISTS quest_rewards (
       id SERIAL PRIMARY KEY,
@@ -132,6 +248,65 @@ data:
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- titles / user_titles （アバター・称号用）
+    CREATE TABLE IF NOT EXISTS titles (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      icon_url VARCHAR(500),
+      category VARCHAR(50) NOT NULL,
+      rarity VARCHAR(20) NOT NULL DEFAULT 'common',
+      unlock_condition_type VARCHAR(50) NOT NULL,
+      unlock_condition_value INTEGER NOT NULL,
+      unlock_condition_description TEXT,
+      is_active BOOLEAN DEFAULT TRUE,
+      sort_order INTEGER DEFAULT 0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS user_titles (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) NOT NULL,
+      title_id INTEGER REFERENCES titles(id) NOT NULL,
+      is_current BOOLEAN DEFAULT FALSE,
+      unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- チャット用テーブル
+    CREATE TABLE IF NOT EXISTS chat_sessions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) NOT NULL,
+      title VARCHAR(255),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id SERIAL PRIMARY KEY,
+      session_id INTEGER REFERENCES chat_sessions(id) NOT NULL,
+      role VARCHAR(20) NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- avatars: 不足カラムの恒久追加
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'avatars' AND column_name = 'unlock_condition_type'
+      ) THEN
+        ALTER TABLE avatars ADD COLUMN unlock_condition_type VARCHAR(50);
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'avatars' AND column_name = 'unlock_condition_value'
+      ) THEN
+        ALTER TABLE avatars ADD COLUMN unlock_condition_value VARCHAR(255);
+      END IF;
+    END$$;
+
     CREATE TABLE IF NOT EXISTS user_avatars (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id),
@@ -140,6 +315,25 @@ data:
       acquired_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, avatar_id)
     );
+
+    -- 不足カラムの恒久追加（idempotent）
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'user_avatars' AND column_name = 'unlocked_at'
+      ) THEN
+        ALTER TABLE user_avatars ADD COLUMN unlocked_at TIMESTAMP WITH TIME ZONE;
+      END IF;
+      -- デフォルトとNULL埋め
+      BEGIN
+        ALTER TABLE user_avatars ALTER COLUMN unlocked_at SET DEFAULT CURRENT_TIMESTAMP;
+      EXCEPTION WHEN others THEN
+        -- 既にデフォルトが設定されている場合は無視
+        NULL;
+      END;
+      EXECUTE 'UPDATE user_avatars SET unlocked_at = CURRENT_TIMESTAMP WHERE unlocked_at IS NULL';
+    END$$;
 
     CREATE TABLE IF NOT EXISTS user_stats (
       id SERIAL PRIMARY KEY,
@@ -152,6 +346,63 @@ data:
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id)
     );
+
+    -- user_stats: 不足カラムの恒久追加
+    DO $$
+    BEGIN
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='total_quests_completed';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN total_quests_completed INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='daily_quests_completed';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN daily_quests_completed INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='current_streak_days';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN current_streak_days INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='max_streak_days';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN max_streak_days INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='total_learning_time_minutes';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN total_learning_time_minutes INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='total_sessions';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN total_sessions INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='total_titles_earned';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN total_titles_earned INTEGER DEFAULT 0; END IF;
+      PERFORM 1 FROM information_schema.columns WHERE table_name='user_stats' AND column_name='total_avatars_unlocked';
+      IF NOT FOUND THEN ALTER TABLE user_stats ADD COLUMN total_avatars_unlocked INTEGER DEFAULT 0; END IF;
+    END$$;
+
+    -- 初期データ投入（存在チェック付き）
+    -- アバター（デフォルト: ひよこ）
+    INSERT INTO avatars (name, description, image_url, category, rarity, is_active, sort_order)
+    SELECT 'ひよこ', '初期アバター', '/avatars/chick.png', 'character', 'common', TRUE, 0
+    WHERE NOT EXISTS (SELECT 1 FROM avatars WHERE name IN ('ひよこ','Chick','ひよこ(初期)'));
+
+    -- クエスト（最低1件の有効クエスト）
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT 'はじめての日記', '今日の出来事を3行で書いてみよう', 'DAILY_LOG', 'EASY', 'self_regulation', 10, '{"template":"daily_log_basic"}'::jsonb, 10, 5, FALSE, 0
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = 'はじめての日記');
+
+    -- 追加クエスト（冪等）
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT '小さな助け合いレポート', '友達/家族を1回手助けし、内容と相手の反応を記録しよう', 'COLLABORATION', 'EASY', 'collaboration', 5, '{"template":"helping_report"}'::jsonb, 80, 20, FALSE, 10
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = '小さな助け合いレポート');
+
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT 'できたこと日記', '今日の「できたこと」を3つ書き、難易度を星で付けよう', 'DAILY_LOG', 'EASY', 'confidence', 8, '{"template":"achievement_diary"}'::jsonb, 100, 30, TRUE, 11
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = 'できたこと日記');
+
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT '困ったら聞こうチャレンジ', '質問文を1つ作り、丁寧に相手へ聞いて結果を記録しよう', 'COLLABORATION', 'MEDIUM', 'collaboration,confidence', 10, '{"template":"ask_for_help"}'::jsonb, 120, 40, FALSE, 12
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = '困ったら聞こうチャレンジ');
+
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT '途中でやめないリレー（3日連続）', '同じ短い習慣を3日連続で続けて記録しよう', 'DAILY_LOG', 'MEDIUM', 'grit', 3, '{"template":"streak_habit"}'::jsonb, 150, 60, FALSE, 13
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = '途中でやめないリレー（3日連続）');
+
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT 'ミニ先生', 'だれかに1つだけ教えて、説明→質問→確認を記録しよう', 'COLLABORATION', 'MEDIUM', 'collaboration,confidence', 12, '{"template":"mini_teacher"}'::jsonb, 140, 50, FALSE, 14
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = 'ミニ先生');
+
+    INSERT INTO quests (title, description, quest_type, difficulty, target_skill, estimated_duration, quest_config, experience_points, coins, is_daily, sort_order)
+    SELECT 'みんな違ってみんないい', '自分と違う意見の良いところを2点書いてみよう', 'STORY_CREATION', 'EASY', 'emotion,collaboration', 7, '{"template":"respect_different_opinion"}'::jsonb, 90, 25, FALSE, 15
+    WHERE NOT EXISTS (SELECT 1 FROM quests WHERE title = 'みんな違ってみんないい');
     SQL
     echo "=== Job: 初期化完了 ==="
 ---

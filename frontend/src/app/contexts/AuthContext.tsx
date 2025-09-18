@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // クッキーにアクセストークンを保存（middlewareが参照）
       // 注意: 本番ではHttpOnly/secure属性をサーバー側で設定すること
-      const maxAge = 30 * 60; // 30分（サーバのトークン期限に整合）
+      const maxAge = 24 * 60 * 60; // 24時間（サーバのトークン期限に整合）
       document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
 
       // localStorageにもトークンを保存（API呼び出し用）
@@ -170,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // トークンを保存
           localStorage.setItem('token', access_token);
-          const maxAge = 30 * 60; // 30分
+          const maxAge = 24 * 60 * 60; // 24時間
           document.cookie = `token=${access_token}; Path=/; Max-Age=${maxAge}`;
 
           console.log('Auto-login after registration successful, token saved:', access_token);
