@@ -14,20 +14,12 @@ from sqlalchemy import select
 
 try:
     # 通常ケース（PYTHONPATHにプロジェクトルートが入っている）
-    from src.domain.models.quest import (
-        Quest,
-        QuestDifficulty,
-        QuestType,
-    )
+    from src.domain.models.quest import Quest, QuestDifficulty, QuestType
     from src.infrastructure.database import SessionLocal
 except ModuleNotFoundError:
     # フォールバック：実行環境でパス未設定の場合にのみ追加
     sys.path.append(str(Path(__file__).resolve().parents[1]))
-    from src.domain.models.quest import (
-        Quest,
-        QuestDifficulty,
-        QuestType,
-    )
+    from src.domain.models.quest import Quest, QuestDifficulty, QuestType
     from src.infrastructure.database import SessionLocal
 
 QUEST_DEFS = [

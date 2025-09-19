@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: asia-northeast1-docker.pkg.dev/web-summarizer-app/app-reg/frontend:5bfe4ce
+          image: gcr.io/web-summarizer-app/frontend:1758306503
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

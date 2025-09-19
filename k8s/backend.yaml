@@ -68,6 +68,11 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: ALLOWED_ORIGINS
+            - name: ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: ENVIRONMENT
             - name: KAFKA_SECURITY_PROTOCOL
               valueFrom:
                 configMapKeyRef:

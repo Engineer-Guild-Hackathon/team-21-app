@@ -148,7 +148,7 @@ export default function QuestDetailPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: 'COMPLETED',
+          status: 'completed',
         }),
       });
 

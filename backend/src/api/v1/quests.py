@@ -54,20 +54,25 @@ async def update_user_stats_on_quest_completion(user_id: int, quest, db: AsyncSe
     if not stats:
         stats = UserStats(user_id=user_id)
         db.add(stats)
+        await db.flush()  # データベースに保存してIDを取得
 
     # 完了クエスト数を増加
-    stats.total_quests_completed += 1
+    stats.total_quests_completed = (stats.total_quests_completed or 0) + 1
 
     # 日次クエストの場合
     if quest.is_daily:
-        stats.daily_quests_completed += 1
+        stats.daily_quests_completed = (stats.daily_quests_completed or 0) + 1
         # 連続日数を更新（簡易実装）
-        stats.current_streak_days += 1
-        stats.max_streak_days = max(stats.max_streak_days, stats.current_streak_days)
+        stats.current_streak_days = (stats.current_streak_days or 0) + 1
+        stats.max_streak_days = max(
+            stats.max_streak_days or 0, stats.current_streak_days
+        )
 
     # 学習時間を増加（推定）
-    stats.total_learning_time_minutes += quest.estimated_duration
-    stats.total_sessions += 1
+    stats.total_learning_time_minutes = (
+        stats.total_learning_time_minutes or 0
+    ) + quest.estimated_duration
+    stats.total_sessions = (stats.total_sessions or 0) + 1
 
 
 @router.get("/", response_model=QuestListResponse)

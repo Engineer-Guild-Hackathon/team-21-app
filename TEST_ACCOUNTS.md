@@ -20,9 +20,9 @@
 | student6@school.com | student123 | 渡辺五郎 | 6A-001    | 6 年 1 組 |
 
 ## 保護者アカウント
-
+teacher123
 | メールアドレス     | パスワード | 名前   | 用途           |
-| ------------------ | ---------- | ------ | -------------- |
+| ------------------ | ---------- | ------ | -------------- |teacher1@school.com
 | parent1@school.com | parent123  | 山田父 | 山田太郎の父親 |
 | parent2@school.com | parent123  | 田中母 | 田中花子の母親 |
 | parent3@school.com | parent123  | 佐藤父 | 佐藤次郎の父親 |

@@ -11,9 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.database import get_db
 from ...infrastructure.kafka_consumer import KafkaEventConsumer
 from ...infrastructure.kafka_producer import KafkaEventProducer
-from ...infrastructure.repositories.learning_repository import (
-    LearningEventRepository,
-)
+from ...infrastructure.repositories.learning_repository import LearningEventRepository
 from ...infrastructure.sse_manager import sse_manager
 
 router = APIRouter()
