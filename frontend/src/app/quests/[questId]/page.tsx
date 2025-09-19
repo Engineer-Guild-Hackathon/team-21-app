@@ -1081,7 +1081,26 @@ export default function QuestDetailPage() {
             <p className="text-gray-600">{quest.description}</p>
           </div>
           <div className="text-right">
-            <Badge className="mb-2">{quest.target_skill}</Badge>
+            <Badge className="mb-2">
+              {quest.target_skill
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean)
+                .map(
+                  s =>
+                    (
+                      ({
+                        grit: 'やり抜く力',
+                        collaboration: '協調性',
+                        self_regulation: '自己調整',
+                        emotional_intelligence: '感情知能',
+                        confidence: '自信',
+                        emotion: '感情',
+                      }) as Record<string, string>
+                    )[s] || s
+                )
+                .join('・')}
+            </Badge>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />

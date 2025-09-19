@@ -86,12 +86,23 @@ const statusLabels = {
 // 対象スキルの日本語ラベル
 const skillLabels: Record<string, string> = {
   grit: 'やり抜く力',
-  collaboration: '協働',
-  self_regulation: '自己制御',
-  emotional_intelligence: '情動知能',
+  collaboration: '協調性',
+  self_regulation: '自己調整',
+  emotional_intelligence: '感情知能',
+  confidence: '自信',
+  emotion: '感情',
 };
 
-const tSkill = (key?: string | null) => (key ? skillLabels[key] || key : '');
+// カンマ区切り（"collaboration,confidence"など）にも対応
+const tSkills = (keys?: string | null) => {
+  if (!keys) return '';
+  return keys
+    .split(',')
+    .map(k => k.trim())
+    .filter(k => k.length > 0)
+    .map(k => skillLabels[k] || k)
+    .join('・');
+};
 
 export default function QuestsPage() {
   const { user, isAuthenticated } = useAuth();
@@ -340,7 +351,7 @@ export default function QuestsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span>対象スキル: {tSkill(quest.target_skill)}</span>
+                      <span>対象スキル: {tSkills(quest.target_skill)}</span>
                     </div>
 
                     <div className="flex items-center space-x-4 text-sm">
@@ -453,7 +464,9 @@ export default function QuestsPage() {
                       </div>
                       <div>
                         <span className="text-gray-600">対象スキル:</span>
-                        <span className="ml-2 font-medium">{questProgress.quest.target_skill}</span>
+                        <span className="ml-2 font-medium">
+                          {tSkills(questProgress.quest.target_skill)}
+                        </span>
                       </div>
                     </div>
 

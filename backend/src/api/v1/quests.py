@@ -8,7 +8,7 @@ from datetime import datetime
 from math import floor
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -346,6 +346,113 @@ async def update_quest_progress(
             await update_user_stats_on_quest_completion(current_user.id, quest, db)
 
             # クエスト完了に伴う称号の解除チェック（初クエストなどを即時付与）
+            await check_and_unlock_achievements(current_user.id, db)
+
+    await db.commit()
+    await db.refresh(progress)
+
+    return QuestProgressResponse.from_orm(progress)
+
+
+# フロント互換用: 進捗IDなしで完了等を更新するフォールバックエンドポイント
+@router.put("/progress", response_model=QuestProgressResponse)
+async def update_quest_progress_fallback(
+    payload: dict = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """進捗IDを指定しない更新要求に対応する簡易フォールバック。
+
+    期待ボディ:
+    { "quest_id": number, "status": "COMPLETED" | "IN_PROGRESS", "current_step": number, "total_steps": number }
+    """
+
+    quest_id = payload.get("quest_id")
+    if not quest_id:
+        raise HTTPException(status_code=422, detail="quest_id が必要です")
+
+    # 最新の該当進捗を取得（なければ作成）
+    progress_stmt = (
+        select(QuestProgress)
+        .where(
+            and_(
+                QuestProgress.user_id == current_user.id,
+                QuestProgress.quest_id == int(quest_id),
+            )
+        )
+        .order_by(desc(QuestProgress.updated_at))
+    )
+    result = await db.execute(progress_stmt)
+    progress = result.scalars().first()
+
+    if not progress:
+        # クエスト存在チェック
+        quest = await db.get(Quest, int(quest_id))
+        if not quest:
+            raise HTTPException(status_code=404, detail="クエストが見つかりません")
+        progress = QuestProgress(
+            user_id=current_user.id,
+            quest_id=int(quest_id),
+            status=QuestStatus.IN_PROGRESS,
+            started_date=datetime.utcnow(),
+        )
+        db.add(progress)
+        await db.flush()
+
+    # ステップ更新
+    if "current_step" in payload:
+        progress.current_step = int(payload["current_step"] or 0)
+    if "total_steps" in payload:
+        progress.total_steps = int(
+            payload["total_steps"] or (progress.total_steps or 0)
+        )
+
+    # 進捗率自動計算
+    if progress.total_steps and progress.total_steps > 0:
+        computed = floor((progress.current_step or 0) / progress.total_steps * 100)
+        progress.progress_percentage = float(max(0, min(100, computed)))
+
+    # ステータス適用（デフォルトでCOMPLETED）
+    desired = payload.get("status") or "COMPLETED"
+    if desired == "COMPLETED" and progress.status != QuestStatus.COMPLETED:
+        progress.status = QuestStatus.COMPLETED
+        progress.completed_date = datetime.utcnow()
+
+        # 報酬/統計/称号
+        quest = await db.get(Quest, progress.quest_id)
+        if quest:
+            reward = QuestReward(
+                user_id=current_user.id,
+                quest_id=quest.id,
+                reward_type="experience",
+                reward_value=quest.experience_points,
+            )
+            db.add(reward)
+            reward.is_claimed = True
+            reward.claimed_at = datetime.utcnow()
+
+            if quest.coins > 0:
+                coin = QuestReward(
+                    user_id=current_user.id,
+                    quest_id=quest.id,
+                    reward_type="coins",
+                    reward_value=quest.coins,
+                )
+                db.add(coin)
+                coin.is_claimed = True
+                coin.claimed_at = datetime.utcnow()
+
+            if quest.badge_id:
+                badge_reward = QuestReward(
+                    user_id=current_user.id,
+                    quest_id=quest.id,
+                    reward_type="badge",
+                    reward_value=1,
+                    reward_data={"badge_id": quest.badge_id},
+                )
+                db.add(badge_reward)
+
+            await update_user_stats_on_quest_completion(current_user.id, quest, db)
             await check_and_unlock_achievements(current_user.id, db)
 
     await db.commit()
